@@ -1,0 +1,30 @@
+version: "3"
+services:
+  ark_valguero:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+        - /servers/ARK_Cluster/ARK_Valguero:/home/steam/ARK
+        - /servers/ARK_Cluster/ARK_Valguero/backups:/home/steam/ARK/ARK-Backups
+    environment:
+      INSTALL: "true"
+      UPDATEONSTART: "true"
+      serverMap: "Valguero_P" # required
+      ark_SessionName: "ARK-Server"
+      ark_Port: 7778
+      ark_QueryPort: 27015
+      ark_RCONPort: 32330
+      ark_MaxPlayers: 15
+      ark_GameModIds: 1786522940,839162288,768023924,943290066,543859212,543859212,821530042,679529026,751991809
+      arkflag_NoBattlEye: "true"
+      arkflag_log: "true"
+    ports:
+        - 7778:7778/udp
+        - 7778:7778
+        - 27015:27015/udp
+        - 27015:27015
+        - 32330:32330
+
+
+  
