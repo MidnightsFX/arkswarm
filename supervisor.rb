@@ -1,8 +1,29 @@
 #! /usr/local/bin/ruby
 
+# Helps ensure that messages are sent as they are generated not on completion of command
 $stdout.sync = true
+
+# walks the filepath and if there is no file/folder there it will generate them, does nothing if they exist
+def ensure_file(location, filename)
+  ug_info = File.stat('/server/ARK/game/PackageInfo.bin')
+  folder_location = '/'
+  location.split('/').each do |segment|
+    next if segment == '' # skip start or end slashes
+    folder_location = folder_location + segment + "/"
+    next if Dir.exist?(folder_location) # do nothing if this folder exists
+    Dir.mkdir(folder_location)
+    File.chown(ug_info.uid, ug_info.gid, folder_location)
+  end
+  # If the file does not exist make a blank one. This is primarily for first gen, when nothing exists
+  if !File.exist?(location + '/' + filename)
+    File.new(location + '/' + filename, 'w')
+    File.chown(ug_info.uid, ug_info.gid, location + '/' + filename)
+  end
+end
+
 # This will take all ENV variables with game_ and use them to generate a configuration
 def gen_arkmanager_conf(ark_mgr_dir)
+  ensure_file(ark_mgr_dir, 'main.cfg')
   arkmanager_keys = []
   ENV.keys.each do |key|
     arkmanager_keys << key if key.include?('arkopt_')
@@ -29,6 +50,7 @@ def gen_arkmanager_conf(ark_mgr_dir)
 end
 
 def gen_game_conf(ark_cfg_dir)
+  ensure_file(ark_cfg_dir, 'Game.ini')
   game_keys = []
   ENV.keys.each do |key|
     game_keys << key if key.include?('arkgame_')
@@ -54,14 +76,24 @@ end
 
 # This will take all ENV variables with gameuser_ and use them to generate a configuration
 def gen_game_user_conf(ark_cfg_dir)
+  ensure_file(ark_cfg_dir, 'GameUserSettings.ini')
   game_user_keys = []
   ENV.keys.each {|key| game_user_keys << key.gsub('gameuser_', '') if key.include?('gameuser_') }
 
   gameuser_confg = File.readlines("#{ark_cfg_dir}/GameUserSettings.ini")
   gameuser_details = {}
   gameuser_confg.each_with_index do |cfg_line, index|
-    gameuser_details[:cfg_start] = index if cfg_line.include?('[ServerSettings]')
-    gameuser_details[:server_settings] = index if cfg_line.include?('[ServerSettings]')
+    if cfg_line.include?('[ServerSettings]')
+      gameuser_details[:cfg_start] = index
+      gameuser_details[:server_settings] = index
+    end
+  end
+
+  # Config was likely empty and we need a skeleton
+  if !gameuser_details[:cfg_start]
+    gameuser_details[:cfg_start] = 0
+    gameuser_details[:server_settings] = 0
+    gameuser_confg = ["[ServerSettings]\n"]
   end
 
   # Add message about the file being auto generated- if it does not exist
@@ -115,9 +147,9 @@ def set_steam_user(user, pass)
       if line.start_with?('steamlogin')
         # format for the steam CMD login: user pass, this will probably not handle special characters well
         if user == 'anonymous'
-          file.write('steamlogin=anonymous')
+          file.write("steamlogin=anonymous\n")
         else
-          file.write("steamlogin=\"#{user} #{pass}\"")
+          file.write("steamlogin=\"#{user} #{pass}\"\n")
         end
       else
         file.write(line)
@@ -172,8 +204,7 @@ def first_run(new_server_status)
   puts srv_status.to_s
   if srv_status.include?('is requested but not installed')
     puts "Mods are missing, starting mod install. This can take a while."
-    srv_status.split("\n")
-    srv_status.each do |line|
+    srv_status.split("\n").each do |line|
       if line.include?('is requested but not installed')
         cmd = line.split("'")[1]
         puts "Mod install command running: #{cmd}"
