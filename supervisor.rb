@@ -103,6 +103,29 @@ def gen_game_user_conf(ark_cfg_dir)
   puts '-------------------------------------------------------------'
 end
 
+# Used to set the steam user at runtime, from ENV variables, this is primarily for DLC map dowwnloading.
+# REQUIRES steam guard disabled
+def set_steam_user(user, pass)
+  user = 'anonymous' if user.nil?
+
+  ark_mgr_cfg = File.readlines('/etc/arkmanager/arkmanager.cfg')
+
+  File.open('/etc/arkmanager/arkmanager.cfg', 'w+') do |file|
+    ark_mgr_cfg.each do |line|
+      if line.start_with?('steamlogin')
+        # format for the steam CMD login: user pass, this will probably not handle special characters well
+        if user == 'anonymous'
+          file.write('steamlogin=anonymous')
+        else
+          file.write("steamlogin=\"#{user} #{pass}\"")
+        end
+      else
+        file.write(line)
+      end
+    end
+  end
+end
+
 
 # Need to check if the install directories are empty first off
 def install_server()
@@ -143,6 +166,25 @@ def first_run(new_server_status)
     puts "Installing Mods, this can take a while."
     puts `arkmanager installmods --verbose`
   end
+
+  # Check status of the server, this should complain about mods which are not installed if we need to install mods
+  srv_status = `arkmanager status`
+  puts srv_status.to_s
+  if srv_status.include?('is requested but not installed')
+    puts "Mods are missing, starting mod install. This can take a while."
+    srv_status.split("\n")
+    srv_status.each do |line|
+      if line.include?('is requested but not installed')
+        cmd = line.split("'")[1]
+        puts "Mod install command running: #{cmd}"
+        puts `#{cmd}`
+      end
+    end
+  end
+
+  # Check for game update before starting.
+  check_for_updates()
+
   # TODO: setup a backoff for server restart, and integrate discord messaging on failures
   puts "Starting server."
   start_server = `arkmanager start --alwaysrestart --verbose`
@@ -166,14 +208,17 @@ end
 # Location for this could be passed in, 
 # but should probably be static to line up with how its elsewhere
 
+# Check for steam user (steam user is required to run DLC maps, Extinction, Aberration_P, ScorchedEarth_P)
+set_steam_user(ENV['steam_user'], ENV['steam_pass'])
+
 # Generate Arkmanager Config
-gen_arkmanager_conf('/etc/arkmanager/instances/')
+gen_arkmanager_conf('/etc/arkmanager/instances')
 
 # Check if there is an ARK installation already
 new_server_status = install_server()
 
 # Generate Game configurations
-config_location = '/server/ARK/game/ShooterGame/Saved/Config/LinuxServer/'
+config_location = '/server/ARK/game/ShooterGame/Saved/Config/LinuxServer'
 gen_game_conf(config_location)
 gen_game_user_conf(config_location)
 

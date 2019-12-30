@@ -5,6 +5,7 @@ services:
     volumes:
         - /servers/cluster_ark/ARK_Valguero:/server
     environment:
+      steam_user: anonymous
       serverMap: "Valguero_P" # required
       ark_SessionName: "ARK-Server"
       ark_Port: 7778
