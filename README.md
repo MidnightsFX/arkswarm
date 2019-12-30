@@ -45,6 +45,14 @@ image: midnightsfx/arkswarm:v0.2.26
     - ark_RCONPort: while this is not technically required, if you wish to perform administrative actions on your server it is highly recommended you expose RCON or setup your secret admin password (default 32330:32330/tcp).
 - Ports: As mentioned above, all of the ports you run the game on inside of the container need to be exposed and matching. If you are running multiple instances of the game (cluster mode) these ports will need to be unique and not overlap for each server.
 
+If you are planning on using a paid DLC you will need a (seperate from your client) steam account with ARK, and the DLC required. This account will need to have steamguard disabled, and have a password which does not contain special characters (sorry this seems to be an issue with how the steamCMD accepts inline passwords).
+
+Add the following lines to your environment variables (or pass them in at runtime so they don't need to be written down!)
+```
+steam_user: example
+steam_pass: fakePass
+```
+
 
 ## Configuration Options:
 
