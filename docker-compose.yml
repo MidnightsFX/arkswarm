@@ -1,7 +1,7 @@
 version: "3"
 services:
   arkserver1:
-    image: midnightsfx/arkswarm:v0.2.26
+    image: midnightsfx/arkswarm:v0.2.36
     volumes:
         - /servers/cluster_ark/ARK_Valguero:/server
     environment:
