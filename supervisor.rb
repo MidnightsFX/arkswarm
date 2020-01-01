@@ -3,6 +3,14 @@
 # Helps ensure that messages are sent as they are generated not on completion of command
 $stdout.sync = true
 
+# Handle being told to kill the container
+Signal.trap("TERM") {
+  puts 'Recieved shutdown, starting shutdown.'
+  `arkmanager stop --saveworld`
+  puts 'Saved and shutdown, exiting.'
+  exit
+}
+
 # walks the filepath and if there is no file/folder there it will generate them, does nothing if they exist
 def ensure_file(location, filename)
   ug_info = File.stat('/server/ARK/game/PackageInfo.bin')
@@ -121,7 +129,7 @@ def gen_game_user_conf(ark_cfg_dir)
   end
 
   cfg_to_add.each do |k|
-    gameuser_confg.insert((gameuser_details[:server_settings] + 1), "#{k}=#{ENV["gameuser_#{k}"]}")
+    gameuser_confg.insert((gameuser_details[:server_settings] + 1), "#{k}=#{ENV["gameuser_#{k}"]}\n")
   end
 
   File.open("#{ark_cfg_dir}/GameUserSettings.ini", 'w+') do |file|
