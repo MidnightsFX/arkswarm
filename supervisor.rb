@@ -179,6 +179,7 @@ def install_server()
   `mkdir /server/ARK-Backups`
   `chown steam:steam /server/ARK -R`
   `chown steam:steam /server/ARK-Backups -R`
+  `chown steam:steam /home/steam/Steam/steamapps/workshop -R`
   # Create an ark instance | only one instance per service
   puts "Starting install of ARK."
   puts `arkmanager install --verbose`
