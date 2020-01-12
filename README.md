@@ -22,6 +22,7 @@ There are a couple pieces which are required:
 image: midnightsfx/arkswarm:v0.2.26
     volumes:
         - /servers/cluster_ark/ARK_Valguero:/server
+        - /servers/cluster_ark/mods:/home/steam/Steam/steamapps/workshop
     environment:
       serverMap: "Valguero_P" # required
       ark_SessionName: "ARK-Server"

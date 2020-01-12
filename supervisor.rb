@@ -178,6 +178,7 @@ def install_server()
   `mkdir /server/ARK`
   `mkdir /server/ARK-Backups`
   `chown steam:steam /server/ARK -R`
+  `chown steam:steam /server/ARK-Backups -R`
   # Create an ark instance | only one instance per service
   puts "Starting install of ARK."
   puts `arkmanager install --verbose`
@@ -186,9 +187,11 @@ end
 
 # Run-once check for an update, if an update is available will update and start back up
 def check_for_updates
-  update_needed = `arkmanager checkupdate`
+  update_res = `arkmanager checkupdate`
+  update_status = $?
   mod_update_needed = `arkmanager checkmodupdate --revstatus`
-  if update_needed.to_i.zero? && mod_update_needed.to_i.zero?
+  mod_update_status = $?
+  if update_status.to_i.zero? && mod_update_status.to_i.zero?
     puts 'No Update needed, sleeping.'
     return false
   end
