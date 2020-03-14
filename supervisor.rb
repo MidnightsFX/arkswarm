@@ -13,7 +13,7 @@ Signal.trap("TERM") {
 
 # walks the filepath and if there is no file/folder there it will generate them, does nothing if they exist
 def ensure_file(location, filename)
-  ug_info = File.stat('/server/ARK/game/PackageInfo.bin')
+  ug_info = File.stat('/home/steam/steamcmd/steamcmd.sh')
   folder_location = '/'
   location.split('/').each do |segment|
     next if segment == '' # skip start or end slashes
@@ -254,11 +254,11 @@ end
 # Check for steam user (steam user is required to run DLC maps, Extinction, Aberration_P, ScorchedEarth_P)
 set_steam_user(ENV['steam_user'], ENV['steam_pass'])
 
-# Check if there is an ARK installation already
-new_server_status = install_server()
-
 # Generate Arkmanager Config
 gen_arkmanager_conf('/etc/arkmanager/instances')
+
+# Check if there is an ARK installation already
+new_server_status = install_server()
 
 # Generate Game configurations
 config_location = '/server/ARK/game/ShooterGame/Saved/Config/LinuxServer'
