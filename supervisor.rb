@@ -254,11 +254,11 @@ end
 # Check for steam user (steam user is required to run DLC maps, Extinction, Aberration_P, ScorchedEarth_P)
 set_steam_user(ENV['steam_user'], ENV['steam_pass'])
 
-# Generate Arkmanager Config
-gen_arkmanager_conf('/etc/arkmanager/instances')
-
 # Check if there is an ARK installation already
 new_server_status = install_server()
+
+# Generate Arkmanager Config
+gen_arkmanager_conf('/etc/arkmanager/instances')
 
 # Generate Game configurations
 config_location = '/server/ARK/game/ShooterGame/Saved/Config/LinuxServer'
