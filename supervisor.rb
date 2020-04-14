@@ -189,17 +189,19 @@ end
 # Run-once check for an update, if an update is available will update and start back up
 def check_for_updates
   update_res = `arkmanager checkupdate`
-  update_status = $?
+  update_status = $?.exitstatus
   mod_update_needed = `arkmanager checkmodupdate --revstatus`
-  mod_update_status = $?
+  mod_update_status = $?.exitstatus
   if update_status.to_i.zero? && mod_update_status.to_i.zero?
     puts 'No Update needed, sleeping.'
     return false
   end
 
   puts 'Update Queued, waiting for the server to empty'
-  update_status = `arkmanager update --ifempty --validate --safe --update-mods`
-  start_status = `arkmanager start --noautoupdate` # we just updated- no need to update now
+  update_status = `arkmanager update --ifempty --validate --safe --verbose`
+  install_mods = `arkmanager installmods --verbose`
+  update_mods = `arkmanager update --update-mods --verbose`
+  start_status = `arkmanager start`
   return true
 end
 
