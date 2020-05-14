@@ -1,4 +1,5 @@
 #! /usr/local/bin/ruby
+require 'optparse'
 
 # Helps ensure that messages are sent as they are generated not on completion of command
 $stdout.sync = true
@@ -198,10 +199,10 @@ def check_for_updates
   end
 
   puts 'Update Queued, waiting for the server to empty'
-  update_status = `arkmanager update --ifempty --validate --safe --verbose`
+  update_status = `arkmanager update --ifempty --validate --saveworld --verbose`
   install_mods = `arkmanager installmods --verbose`
   update_mods = `arkmanager update --update-mods --verbose`
-  start_status = `arkmanager start`
+  start_status = `arkmanager start --alwaysrestart --verbose`
   return true
 end
 
@@ -266,6 +267,10 @@ new_server_status = install_server()
 config_location = '/server/ARK/game/ShooterGame/Saved/Config/LinuxServer'
 gen_game_conf(config_location)
 gen_game_user_conf(config_location)
+
+ARGV.each do|a|
+  puts "Found argument: #{a}"
+end
 
 # start service
 # check if update is available
