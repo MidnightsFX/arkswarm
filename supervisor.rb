@@ -12,6 +12,15 @@ Signal.trap("TERM") {
   exit
 }
 
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: --validate"
+
+  opts.on("-v", "--validate", "Optionally forces the startup process to validate all mods and gamefiles.") do |v|
+    options[:validate] = true
+  end
+end.parse!
+
 # walks the filepath and if there is no file/folder there it will generate them, does nothing if they exist
 def ensure_file(location, filename)
   ug_info = File.stat('/home/steam/steamcmd/steamcmd.sh')
@@ -167,6 +176,12 @@ def set_steam_user(user, pass)
   end
 end
 
+def validate_gamefiles(validate_status)
+  return false unless validate_status
+
+  `arkmanager update --validate --update-mods`
+end
+
 
 # Need to check if the install directories are empty first off
 def install_server()
@@ -241,12 +256,12 @@ end
 def run_server(new_server_status)
   first_run(new_server_status) # this will start up the server, it can take quite a while to update/get started.
   loop do
+    # check for updates, restart server if needed, this should block if updates are required
+    check_for_updates()
     36.times do # sleep 3600 # sleep one hour
       puts "#{`arkmanager status`}"
       sleep 100
     end
-    # check for updates, restart server if needed, this should block if updates are required
-    check_for_updates()
   end
 end
 
@@ -268,9 +283,8 @@ config_location = '/server/ARK/game/ShooterGame/Saved/Config/LinuxServer'
 gen_game_conf(config_location)
 gen_game_user_conf(config_location)
 
-ARGV.each do|a|
-  puts "Found argument: #{a}"
-end
+# Handle Validation CLI option
+validate_gamefiles(options[:validate])
 
 # start service
 # check if update is available
