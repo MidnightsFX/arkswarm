@@ -23,6 +23,7 @@ image: midnightsfx/arkswarm:v0.2.26
     volumes:
         - /servers/cluster_ark/ARK_Valguero:/server
         - /servers/cluster_ark/mods:/home/steam/Steam/steamapps/workshop
+        - /servers/cluster_ark/config:/config
     environment:
       serverMap: "Valguero_P" # required
       ark_SessionName: "ARK-Server"
@@ -37,7 +38,10 @@ image: midnightsfx/arkswarm:v0.2.26
         - 32330:32330
 ```
 
-- Volumes: this is where the actual arkserver gamefiles will live on your docker host machine.
+- Volumes: (three entrys explained by example)
+    - ``` /servers/cluster_ark/ARK_Valguero:/server ``` This is where your actual ark install lives, the first half of this path is your local-machine (and can be wherever you want), the second part `/server` is required.
+    - ``` /servers/cluster_ark/mods:/home/steam/Steam/steamapps/workshop ``` This is wwhere steam will download mods (seperate from installing them). This is an optional mount, but will massively spead up startup when changing docker images
+    - ``` /servers/cluster_ark/config:/config ``` configurations that will be merged into ARKs configs, this can include custom mod configurations, complete (or partial) ark configs
 - Environment: 
     - serverMap: this can be any of the official (or not) maps, but it should be set
     - ark_SessionName: while not required, highly suggested you set your session name so you can distinquish multiple instances.
@@ -56,6 +60,58 @@ steam_pass: fakePass
 
 
 ## Configuration Options:
+
+There are two different configuration options provided.
+
+1. Loose configuration provided by the volume mount ```/your_configs_live_here:/configs``` This is the preferred configuration method as you can provide multiple configuration files with piecemeal configuration, for mods, or repeat values (like overriding recipes etc).
+2. ENV variable passing. There is a rather lengthy system defined below which allows passing configuration for most things to the ARK environment (mod configuration and repeat values are not supported).
+
+## Loose Configuration files mounted by Volume
+
+This is the preferred way of providing configuration and gives you a great deal of configuration choices.
+
+The basis of this is that you will need to mount a volume for the supervisor container at `/configs`, everything under this directory (recursively) will be inspected and considered for configuration ingest. This means you can provide partial configurations for many different aspects of ARK here.
+
+EG:
+```
+/servers/ARK/configs/
+                    - openstructures_configs.ini
+                    - recipe_overrides.ini
+                    - player_xp_settings.ini
+                    - stat_scaling.ini
+```
+
+When mounting the above directory to /configs eg: ``` /servers/ARK/configs/:/configs ``` all of these files will be read and added to your ARK configuration.
+
+### Config File Format
+
+There are a options to ensure these configs are ingested in the way you would like.
+
+1. Rely on the auto-sorter
+There is a config matcher which will look for `[/Script/ShooterGame.ShooterGameMode]` as a header in the config file, if it does not find this it will place the configuration in `gameUserSettings.ini`
+This can be overwritten with the use of a moniker, detailed below. Either way, your config file must make use of section headers to be ingested in a useful way.
+
+```
+[/Script/ShooterGame.ShooterGameMode]
+ResolutionSizeX=2560
+ResolutionSizeY=1080
+...
+```
+
+2. Specify a moniker
+EG: 
+```
+#!gameuser
+[ServerSettings]
+ListenServerTetherDistanceMultiplier=1.000000
+RaidDinoCharacterFoodDrainMultiplier=1.000000
+```
+Setting the first line to `#!gameuser` or `#!game` will ensure that the files configs are merged into the correct file.
+
+
+
+
+## ENV Variable Passing Configuration:
 
 All of these configuration options are passed in as environment variables. It is highly recommended to pass these environment variables that are shared between servers as a single .env file in the docker-compose setup or in the kubernetes deployment.
 
@@ -78,7 +134,7 @@ arkgame_bPvEDisableFriendlyFire=True
 ```
 ---
 ### gameuser_
-these values will be passed to the GameUserSettings.ini file on startup and will override values they match (or be added to the [ServerSettings] section) this file will be generated each time at startup, using existing values and updating/setting any values which are found
+these values will be passed to the GameUserSettings.ini file on startup and will override values they match. This file will be generated each time at startup; using existing values, updating existing values with provided configuration and setting any values which are not found, but have been provided as environment variables.
 
 ```
 gameuser_*="value"

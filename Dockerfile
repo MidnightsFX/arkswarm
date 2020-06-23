@@ -17,7 +17,7 @@ RUN useradd -m steam \
         && cd home/steam/steamcmd \
         && curl 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar -vxz"
 
-# Setting back to root
+# Setting user back to root
 USER root
 
 WORKDIR /home/steam

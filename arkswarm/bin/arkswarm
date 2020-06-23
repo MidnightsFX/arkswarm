@@ -1,0 +1,14 @@
+#!ruby
+require "thor"
+require "arkswarm"
+
+class CLI < Thor
+    desc "start", "Starts the ARKSwarm manager"
+    method_option :validate, :aliases => "-v", default: false :desc => "Validate gamefiles and mods before starting"
+    def start
+        # kick off startup workflow and watcher
+        Supervisor.main_loop(options[:validate])
+    end
+end
+
+CLI.start
