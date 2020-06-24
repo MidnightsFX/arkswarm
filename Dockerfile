@@ -25,13 +25,15 @@ WORKDIR /home/steam
 RUN curl -sL http://git.io/vtf5N | bash -s steam
 
 COPY global.cfg /etc/arkmanager/arkmanager.cfg
-COPY supervisor.rb /supervisor.rb
+COPY arkswarm/pkg/arkswarm-0.1.0.gem /gem/arkswarm-0.1.0.gem
+# Since this is a local install the dependencies need to be already installed
+RUN gem install thor
+RUN gem install --local /gem/arkswarm-0.1.0.gem 
 
-RUN chmod +x /supervisor.rb
 # Use a persistent volume for game data, setup, saves and backups
 VOLUME /server/
 
 # EXPOSE 7778:7778/udp 7778:7778 27015:27015/udp 27015:27015 32330:32330
 
 WORKDIR /server
-ENTRYPOINT ["/supervisor.rb"]
+ENTRYPOINT ["arkswarm start"]

@@ -8,9 +8,9 @@ module Arkswarm
 
   GAMEINI_MONIKER= ['game', 'gameini', 'game.ini'].freeze
   GAMEUSERSETTINGSINI_MONIKER= ['gameuser', 'gameuser', 'gameusersetting', 'gameusersettings', 'gameusersettings.ini'].freeze
-  DUPLICATABLE_KEYS = %w(ConfigOverrideItemMaxQuantity LevelExperienceRampOverrides HarvestResourceItemAmountClassMultipliers DinoClassDamageMultipliers TamedDinoClassDamageMultipliers DinoClassResistanceMultipliers 
-     ConfigOverrideItemCraftingCosts TamedDinoClassResistanceMultipliers ConfigOverrideSupplyCrateItems EngramEntryAutoUnlocks OverrideEngramEntries OverrideNamedEngramEntries 
-     ConfigAddNPCSpawnEntriesContainer ConfigSubtractNPCSpawnEntriesContainer ConfigOverrideNPCSpawnEntriesContainer DinoSpawnWeightMultipliers)
+  DUPLICATABLE_KEYS = %w(OverridePlayerLevelEngramPoints ConfigOverrideItemMaxQuantity LevelExperienceRampOverrides HarvestResourceItemAmountClassMultipliers DinoClassDamageMultipliers TamedDinoClassDamageMultipliers 
+    DinoClassResistanceMultipliers ConfigOverrideItemCraftingCosts TamedDinoClassResistanceMultipliers ConfigOverrideSupplyCrateItems EngramEntryAutoUnlocks OverrideEngramEntries OverrideNamedEngramEntries 
+    ConfigAddNPCSpawnEntriesContainer ConfigSubtractNPCSpawnEntriesContainer ConfigOverrideNPCSpawnEntriesContainer DinoSpawnWeightMultipliers)
 
   LOG = Logger.new(STDOUT)
   LOG.level = Logger::INFO
@@ -21,5 +21,14 @@ module Arkswarm
 
   def self.set_fatal # For testing purposes, no logging
     Arkswarm::LOG.level = Logger::FATAL
+  end
+
+  @config = {}
+  def self.config
+    return @config
+  end
+
+  def self.set_cfg_value(key, value)
+    @config[key] = value
   end
 end

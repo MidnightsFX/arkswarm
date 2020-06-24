@@ -3,7 +3,7 @@ module Arkswarm
     module FileManipulator
 
         # walks the filepath and if there is no file/folder there it will generate them, does nothing if they exist
-        def self.ensure_file(location, filename)
+        def self.ensure_file(location, filename = nil)
             ug_info = File.stat('/home/steam/steamcmd/steamcmd.sh')
             folder_location = '/'
             location.split('/').each do |segment|
@@ -13,10 +13,12 @@ module Arkswarm
                 Dir.mkdir(folder_location)
                 File.chown(ug_info.uid, ug_info.gid, folder_location)
             end
-            # If the file does not exist make a blank one. This is primarily for first gen, when nothing exists
-            if !File.exist?(location + '/' + filename)
-                File.new(location + '/' + filename, 'w')
-                File.chown(ug_info.uid, ug_info.gid, location + '/' + filename)
+            if filename
+                # If the file does not exist make a blank one. This is primarily for first gen, when nothing exists
+                if !File.exist?(location + '/' + filename)
+                    File.new(location + '/' + filename, 'w')
+                    File.chown(ug_info.uid, ug_info.gid, location + '/' + filename)
+                end
             end
         end
 
@@ -36,14 +38,13 @@ module Arkswarm
             end
             # Ensure directory permissions are OK to install as steam
             LOG.info("Making install directories, and setting permissions.")
-            `mkdir /server/ARK`
-            `mkdir /server/ARK-Backups`
-            `chown steam:steam /server/ARK -R`
-            `chown steam:steam /server/ARK-Backups -R`
-            `chown steam:steam /home/steam/Steam/steamapps/workshop -R`
+            FileManipulator.ensure_file('/server/ARK')
+            FileManipulator.ensure_file('/server/ARK-Backups')
+            FileManipulator.ensure_file('/home/steam/Steam/steamapps/workshop')
             # Create an ark instance | only one instance per service
             LOG.info("Starting install of ARK.")
-            `arkmanager install --verbose`
+            LOG.info(`arkmanager install --verbose`)
+            LOG.info("Ark install completed.")
             return true
         end
     end

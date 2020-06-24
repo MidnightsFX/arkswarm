@@ -35,7 +35,7 @@ module Arkswarm
 
 
         def self.discover_configurations(location = '/config')
-            return false unless Dir.exist?(location) # check if /config exists
+            return {} unless Dir.exist?(location) # check if /config exists
 
             # returnable config
             config_mash = {}
@@ -44,34 +44,43 @@ module Arkswarm
             files = Dir["#{location}/**/*"]
             files.each do |file|
                 parsed_file = ConfigLoader.parse_ini_file(file)
-                ConfigLoader.merge_configs!(config_mash, parsed_file)
+                config_mash = ConfigLoader.merge_configs(config_mash, parsed_file)
             end
             return config_mash
         end
 
-        def self.merge_configs!(primary, secondary)
+        def self.merge_configs(primary, secondary)
+            return primary if secondary.nil?
+            merged_hash = Util.deep_copy(primary)
+            LOG.debug("Merging: #{primary.keys} & #{secondary.keys}")
             secondary.each do |key, values|
-                if primary.has_key?(key)
+                if merged_hash.has_key?(key)
+                    LOG.debug("primary & secondary key #{key} found merging")
                     # gotta merge in the key
                     secondary[key]['content'].each do |entry|
                         if DUPLICATABLE_KEYS.include?(entry[0]) # if the key can be a duplicate, it just gets added
-                            primary[key]['keys'] << entry[0] unless primary[key]['keys'].include?(entry[0]) # only need the key, in keys, if this is the first one
-                            primary[key]['content'] << entry
-                        elsif primary[key]['keys'].include?(entry[0]) # its a non-duplicatable key, that already exists, needs its value updated
-                            primary[key]['contents'].each do |prime_entry|
+                            LOG.debug("Duplicatable key #{entry[0]} found, adding key")
+                            LOG.debug("Adding key #{entry[0]}, adding value #{entry}")
+                            merged_hash[key]['keys'] << entry[0] unless primary[key]['keys'].include?(entry[0]) # only need the key, in keys, if this is the first one
+                            merged_hash[key]['content'] << entry
+                        elsif merged_hash[key]['keys'].include?(entry[0]) # its a non-duplicatable key, that already exists, needs its value updated
+                            LOG.debug("Non-duplicatable key #{entry[0]} found, taking preferred value")
+                            merged_hash[key]['content'].each do |prime_entry|
                                 next unless prime_entry[0] == entry[0]
                                 prime_entry[1] = entry[1] # set the value to the new value
                             end
                         else # the section exists, but doesn't contain the provided key- add it
-                            primary[key]['keys'] << entry[0]
-                            primary[key]['contents'] << entry
+                            LOG.debug("New key #{entry[0]} found, adding value")
+                            merged_hash[key]['keys'] << entry[0]
+                            merged_hash[key]['content'] << entry
                         end
                     end
                 else
                     # no merge, just add the key and its values
-                    primary[key] = values
+                    merged_hash[key] = values
                 end
             end
+            return merged_hash
         end
 
         # Filters through a configuration hash and updates the key which matches the one passed in

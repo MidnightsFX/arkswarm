@@ -29,7 +29,7 @@ module Arkswarm
       ConfigGen.gen_addvalues_read_write_cfg(ark_mgr_dir, cfgname, contents, required_lines)
     end
 
-    def gen_game_conf(ark_cfg_dir, provided_configuration = nil)
+    def self.gen_game_conf(ark_cfg_dir, provided_configuration = nil)
       cfgname = 'Game.ini'
       FileManipulator.ensure_file(ark_cfg_dir, cfgname)
       required_lines = []
@@ -38,12 +38,12 @@ module Arkswarm
         required_lines << "#{key.gsub('arkgame_', '')}=#{ENV[key]}"
       end
       contents = ConfigLoader.parse_ini_file("#{ark_cfg_dir}/#{cfgname}")
-      ConfigGen.merge_config_by_type!(:game, contents, provided_configuration) unless provided_configuration.nil?
-      ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, contents, required_lines)
+      game_cfg = ConfigGen.merge_config_by_type(:game, contents, provided_configuration) unless provided_configuration.nil?
+      ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, game_cfg, required_lines)
     end
 
     # This will take all ENV variables with gameuser_ and use them to generate a configuration
-    def gen_game_user_conf(ark_cfg_dir, provided_configuration = nil)
+    def self.gen_game_user_conf(ark_cfg_dir, provided_configuration = nil)
       cfgname = "GameUserSettings.ini"
       FileManipulator.ensure_file(ark_cfg_dir, cfgname)
       required_lines = []
@@ -52,21 +52,32 @@ module Arkswarm
         required_lines << "#{key.gsub('gameuser_', '')}=#{ENV[key]}"
       end
       contents = ConfigLoader.parse_ini_file("#{ark_cfg_dir}/#{cfgname}")
-      ConfigGen.merge_config_by_type!(:gameini, contents, provided_configuration) unless provided_configuration.nil?
-      ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, contents, required_lines)
+      game_user_cfg = ConfigGen.merge_config_by_type(:gameini, contents, provided_configuration) unless provided_configuration.nil?
+      ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, game_user_cfg, required_lines)
     end
 
     # merges the total jumble of configs into the correct places
-    def self.merge_config_by_type!(type, primary_config, provided_configuration)
+    def self.merge_config_by_type(type, primary_config, provided_configuration)
+      merged_configuration = {}
+      shootergame_key = provided_configuration.keys.find {|k|  k.downcase == '[/script/shootergame.shootergamemode]'}
       if type == :game
         # merge only '[/script/shootergame.shootergamemode]', does nothing if that doesnt exist
-        if provided_configuration.has_key('[/script/shootergame.shootergamemode]')
-          ConfigLoader.merge_configs!(primary_config, { "[/script/shootergame.shootergamemode]" => provided_configuration["[/script/shootergame.shootergamemode]"] })
+        LOG.debug("Checking for shootergame key: #{provided_configuration.keys} found? #{shootergame_key}")
+        unless shootergame_key.nil?
+          cased_provided_cfg = { '[/Script/ShooterGame.ShooterGameMode]' => provided_configuration[shootergame_key] } # Ark cares about the casing so we need to also...
+          shooter_cfg = if primary_config[shootergame_key] 
+                          { '[/Script/ShooterGame.ShooterGameMode]' => primary_config[shootergame_key] }
+                        else # primary config might not have this section, in which case we need to provide an empty one
+                          { '[/Script/ShooterGame.ShooterGameMode]' => { 'content' => [], 'keys' => []} }
+                        end
+          LOG.debug("Providing: #{shooter_cfg} & #{cased_provided_cfg}")
+          merged_configuration = ConfigLoader.merge_configs(shooter_cfg, cased_provided_cfg)
         end
       else
         # Merge everything but "[/script/shootergame.shootergamemode]" which is for game
-        ConfigLoader.merge_configs!(primary_config, provided_configuration.tap { |hs| hs.delete("[/script/shootergame.shootergamemode]") })
+        merged_configuration = ConfigLoader.merge_configs(primary_config, provided_configuration.tap {|hs| hs.delete(shootergame_key)})
       end
+      return merged_configuration
     end
 
     # Adds required values to the contents, generates a new config file and writes it out, and then reads it to the logger
@@ -85,9 +96,11 @@ module Arkswarm
     def self.readout_file(file_location, filename)
       LOG.info("Generated #{filename} Configuration File:")
       LOG.info("#{file_location}/#{filename}")
-      LOG.info('----------------- Config Start -----------------')
-      LOG.info("\n#{File.readlines("#{file_location}/#{filename}").join.to_s}")
-      LOG.info('----------------- Config End -------------------')
+      if Arkswarm.config[:showcfg]
+        LOG.info('----------------- Config Start -----------------')
+        LOG.info("\n#{File.readlines("#{file_location}/#{filename}").join.to_s}")
+        LOG.info('----------------- Config End -------------------')
+      end
     end
 
   end

@@ -3,11 +3,15 @@ require "thor"
 require "arkswarm"
 
 class CLI < Thor
-    desc "start", "Starts the ARKSwarm manager"
-    method_option :validate, :aliases => "-v", default: false :desc => "Validate gamefiles and mods before starting"
+    # Sync output to be more realtime, not command completed
+    $stdout.sync = true
+
+    desc("start", "Starts the ARKSwarm manager")
+    option :validate, aliases: :v, type: :boolean,  default: false, desc: "Validate gamefiles and mods before starting"
+    option :showcfg, type: :boolean, default: true, desc: "Print generated configurations during startup"
     def start
         # kick off startup workflow and watcher
-        Supervisor.main_loop(options[:validate])
+        Arkswarm::Supervisor.main_loop(options)
     end
 end
 

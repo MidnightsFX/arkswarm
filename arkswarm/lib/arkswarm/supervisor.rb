@@ -1,15 +1,8 @@
 module Arkswarm
   module Supervisor
 
-    # Handle being told to kill the container
-    Signal.trap("TERM") {
-      puts 'Recieved shutdown, starting shutdown.'
-      `arkmanager stop --saveworld`
-      puts 'Saved and shutdown, exiting.'
-      exit
-    }
-
     def self.main_loop(options)
+      Arkswarm.set_cfg_value(:showcfg, options[:showcfg])
       # Start by generating or regenerating configurations
       # Check for steam user (steam user is required to run DLC maps, Extinction, Aberration_P, ScorchedEarth_P)
       ConfigGen.gen_arkmanager_global_conf("/etc/arkmanager", 'arkmanager.cfg', ENV['steam_user'], ENV['steam_pass'])
@@ -35,7 +28,7 @@ module Arkswarm
 
     # Loops running the server process
     def self.run_server(new_server_status)
-      first_run(new_server_status) # this will start up the server, it can take quite a while to update/get started.
+      Supervisor.first_run(new_server_status) # this will start up the server, it can take quite a while to update/get started.
       loop do
         # check for updates, restart server if needed, this should block if updates are required
         Supervisor.check_for_updates()
@@ -65,33 +58,33 @@ module Arkswarm
         return true
     end
 
-    def first_run(new_server_status)
+    def self.first_run(new_server_status)
       if new_server_status
-        puts "Updating ARK"
-        puts `arkmanager update --verbose`
-        puts "Installing Mods, this can take a while."
-        puts `arkmanager installmods --verbose`
+        LOG.info("Updating ARK")
+        LOG.info(`arkmanager update --verbose`)
+        LOG.info("Installing Mods, this can take a while.") 
+        LOG.info(`arkmanager installmods --verbose`)
       end
       
       # Check status of the server, this should complain about mods which are not installed if we need to install mods
       srv_status = `arkmanager status`
-      puts srv_status.to_s
+      LOG.info(srv_status.to_s)
       if srv_status.include?('is requested but not installed')
-        puts "Mods are missing, starting mod install. This can take a while."
+        LOG.info("Mods are missing, starting mod install. This can take a while.")
         srv_status.split("\n").each do |line|
-          if line.include?('is requested but not installed')
+          if line.include?('is requested but not installed') # bit of a hack to install mods which are missing
             cmd = line.split("'")[1]
-            puts "Mod install command running: #{cmd}"
-            puts `#{cmd}`
+            LOG.info("Mod install command running: #{cmd}")
+            LOG.info(`#{cmd}`)
           end
         end
       end
       
       # Check for game update before starting.
-      check_for_updates()
+      Supervisor.check_for_updates()
     
       # TODO: setup a backoff for server restart, and integrate discord messaging on failures
-      puts "Starting server."
+      LOG.info("Starting server.")
       start_server = `arkmanager start --alwaysrestart --verbose`
       return start_server
     end
