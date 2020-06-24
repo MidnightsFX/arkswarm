@@ -4,26 +4,37 @@ module Arkswarm
         # This takes in an INI file and generates a structure like this:
         # file = { section_header1 => { contents => [ [key, value]... ], keys => [key, key...]}, ... }
         def self.parse_ini_file(filepath)
-            file_lines = File.readlines("#{filepath}", chomp: true)
+            file_lines = IO.readlines("#{filepath}", chomp: true)
             LOG.debug("Ingested #{file_lines.length} lines.")
             file_contents = { }
             current_section = ""
             LOG.debug("Starting ingest of #{filepath}")
-            file_lines.each do |line|
+            file_lines.each_with_index do |line, index|
                 LOG.debug(line)
+                # If there is a header determining this config file to be a game.ini conf then we use that to set the header, if configs are unordered they will go in here
+                if index == 0 && line.strip == #!game
+                    LOG.debug("game header found, setting section")
+                    current_section = '[/Script/ShooterGame.ShooterGameMode]'
+                    file_contents[current_section] = { "content" => [], "keys" => [] }
+                end
+                
                 next if line[0] == "#" && current_section == "" # Skips the generated header, or other header comments
 
                 if line[0] == "[" # new section
+                    LOG.debug("New section #{line}")
                     current_section = line
                     file_contents[current_section] = { "content" => [], "keys" => [] }
                 else
                     if current_section.empty? # catch for reading in files that have contents outside of header sections, or dont use header sections
+                        LOG.debug("Found lines without a section, placing them in ungrouped.")
                         current_section = "ungrouped"
                         file_contents[current_section] = { "content" => [], "keys" => [] }
                     end
                     if line.empty? # keep empty lines but dont multiply or add their keys
+                        LOG.debug("Found an empty line, keeping it.")
                         file_contents[current_section]["content"] << ""
                     else
+                        LOG.debug("Found a non-empty, non-header line to add to a section: #{line}")
                         line_contents = line.split("=")
                         file_contents[current_section]["content"] << line_contents
                         file_contents[current_section]["keys"] << line_contents[0]
