@@ -25,10 +25,12 @@ WORKDIR /home/steam
 RUN curl -sL http://git.io/vtf5N | bash -s steam
 
 COPY global.cfg /etc/arkmanager/arkmanager.cfg
+# If you are building this yourself you will need to install dependencies and build the gem locally
+# bundle install in /arkswarm, rake build to get the artifact
 COPY arkswarm/pkg/arkswarm-0.1.0.gem /gem/arkswarm-0.1.0.gem
 # Since this is a local install the dependencies need to be already installed
 RUN gem install thor
-RUN gem install --local /gem/arkswarm-0.1.0.gem 
+RUN gem install --local /gem/arkswarm-0.1.0.gem
 
 # Use a persistent volume for game data, setup, saves and backups
 VOLUME /server/

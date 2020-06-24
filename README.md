@@ -7,6 +7,7 @@ Current features:
 - Automatic updates, server will check for ark updates on a regular interval and when it finds one, will wait until the server is empty and stop, update and start back up (this applies to mods too)
 - Automatic installation of mods, no longer do you need to copy windows files to your linux server to install new mods or update existing ones.
 - Sharable configuration, configuration files for ark are generated from variables provided to the container. Meaning you can have multiple servers running with the same shared values easily.
+- partial configuration file support, you can define configurations for a variety of things in seperate files, using the new loose configuration file support
 
 Planned features:
 - Proper local clustering support, currently you can run multiple servers, but automatic cluster connectivity and configuration is not handled yet.
@@ -19,7 +20,7 @@ The provided docker-compose should give you a reasonable idea of what is require
 There are a couple pieces which are required:
 
 ```
-image: midnightsfx/arkswarm:v0.2.26
+image: midnightsfx/arkswarm:v1.0.0
     volumes:
         - /servers/cluster_ark/ARK_Valguero:/server
         - /servers/cluster_ark/mods:/home/steam/Steam/steamapps/workshop
@@ -141,3 +142,20 @@ gameuser_*="value"
 eg:
 gameuser_ShowMapPlayerLocation=True
 ```
+
+
+## Something Went Wrong
+Well, we all knew this was bound to happen, your server is crashing and ARK is throwing a fit, mods which worked yesterday no longer work.
+
+* Ensure that all of your mods still exist, the server can't serve mods that no longer exist effectively
+* Validate your game and mod files!
+
+Validating your game and mod files is relatively easy, you simply need to provide a new startup argument to the arkswarm container, as follows:
+
+```
+image: midnightsfx/arkswarm:v1.0.0
+    entrypoint: arkswarm start --validate
+    ...
+```
+
+The server will validate your gamefiles & mods before starting.

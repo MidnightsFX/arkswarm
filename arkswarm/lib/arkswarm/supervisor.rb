@@ -53,7 +53,11 @@ module Arkswarm
         LOG.info('Update Queued, waiting for the server to empty')
         update_status = `arkmanager update --ifempty --validate --saveworld --verbose`
         install_mods = `arkmanager installmods --verbose`
+        LOG.info('Checking for mod to install')
+        LOG.info(install_mods)
         update_mods = `arkmanager update --update-mods --verbose`
+        LOG.info('Checking for mod to update')
+        LOG.info(update_mods)
         start_status = `arkmanager start --alwaysrestart --verbose`
         return true
     end
