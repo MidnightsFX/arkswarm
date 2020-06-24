@@ -5,6 +5,7 @@ services:
     volumes:
         - /servers/cluster_ark/ARK_Valguero:/server
         - /servers/cluster_ark/mods:/home/steam/Steam/steamapps/workshop
+        - /servers/cluster_ark/config:/config
     environment:
       steam_user: anonymous
       serverMap: "Valguero_P" # required
