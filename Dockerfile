@@ -38,4 +38,4 @@ VOLUME /server/
 # EXPOSE 7778:7778/udp 7778:7778 27015:27015/udp 27015:27015 32330:32330
 
 WORKDIR /server
-ENTRYPOINT ["arkswarm start"]
+ENTRYPOINT ["arkswarm", "start"]
