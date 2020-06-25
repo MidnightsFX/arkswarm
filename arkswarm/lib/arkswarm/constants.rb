@@ -6,8 +6,9 @@ module Arkswarm
 
   VERSION = "0.1.0"
 
-  GAMEINI_MONIKER= ['game', 'gameini', 'game.ini'].freeze
-  GAMEUSERSETTINGSINI_MONIKER= ['gameuser', 'gameuser', 'gameusersetting', 'gameusersettings', 'gameusersettings.ini'].freeze
+  GAMEINI_MONIKER = ['game', 'gameini', 'game.ini'].freeze
+  ARK_INSTANCE_VARS = %w(serverMap serverMapModId)
+  GAMEUSERSETTINGSINI_MONIKER = ['gameuser', 'gameuser', 'gameusersetting', 'gameusersettings', 'gameusersettings.ini'].freeze
   DUPLICATABLE_KEYS = %w(OverridePlayerLevelEngramPoints ConfigOverrideItemMaxQuantity LevelExperienceRampOverrides HarvestResourceItemAmountClassMultipliers DinoClassDamageMultipliers TamedDinoClassDamageMultipliers 
     DinoClassResistanceMultipliers ConfigOverrideItemCraftingCosts TamedDinoClassResistanceMultipliers ConfigOverrideSupplyCrateItems EngramEntryAutoUnlocks OverrideEngramEntries OverrideNamedEngramEntries 
     ConfigAddNPCSpawnEntriesContainer ConfigSubtractNPCSpawnEntriesContainer ConfigOverrideNPCSpawnEntriesContainer DinoSpawnWeightMultipliers)

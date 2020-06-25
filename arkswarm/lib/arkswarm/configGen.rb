@@ -22,8 +22,9 @@ module Arkswarm
       required_lines = []
       required_lines << "arkserverroot=/server/ARK/game"
       ENV.keys.each do |key|
-        next unless key.include?('arkopt_') || key.include?('ark_') || key.include?('arkflag_')
-        required_lines << "#{key.gsub('arkopt_', '').gsub('ark_', '').gsub('arkflag_', '')}=\"#{ENV[key]}\""
+        next unless key.include?('arkopt_') || key.include?('ark_') || key.include?('arkflag_') || ARK_INSTANCE_VARS.include?(key)
+        # key.gsub('arkopt_', '').gsub('ark_', '').gsub('arkflag_', '')
+        required_lines << "#{key}=\"#{ENV[key]}\""
       end
       contents = ConfigLoader.parse_ini_file("#{ark_mgr_dir}/#{cfgname}")
       ConfigGen.gen_addvalues_read_write_cfg(ark_mgr_dir, cfgname, contents, required_lines)
