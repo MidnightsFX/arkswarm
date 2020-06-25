@@ -70,7 +70,13 @@ module Arkswarm
                     # gotta merge in the key
                     secondary[key]['content'].each do |entry|
                         if DUPLICATABLE_KEYS.include?(entry[0]) # if the key can be a duplicate, it just gets added
-                            LOG.debug("Duplicatable key #{entry[0]} found, adding key")
+                            LOG.debug("Duplicatable key #{entry[0]} found,checking for keyvalue")
+                            already_included = false
+                            merged_hash[key]['content'].each do |prime_entry|
+                                next unless entry == prime_entry
+                                already_included = true
+                            end
+                            next if already_included # there is already a key and value of this in the config, no need to duplicate it.
                             LOG.debug("Adding key #{entry[0]}, adding value #{entry}")
                             merged_hash[key]['keys'] << entry[0] unless primary[key]['keys'].include?(entry[0]) # only need the key, in keys, if this is the first one
                             merged_hash[key]['content'] << entry

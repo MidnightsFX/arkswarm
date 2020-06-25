@@ -1,4 +1,4 @@
-FROM ruby:2.4.6-stretch
+FROM ruby:2.7.1-buster
 
 # Author MidnightsFX
 

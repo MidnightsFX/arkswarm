@@ -28,5 +28,13 @@ RSpec.describe Arkswarm::ConfigLoader do
         generated_contents = Arkswarm::ConfigLoader.generate_config_file(file_contents)
         expect(generated_contents.length).to eq(10)
     end
+
+
+    it "Should generate a contents tree with duplicatable keys that are different, not the same", :this do
+        primary = Arkswarm::ConfigLoader.parse_ini_file("#{__dir__}/testdata/provided_dupe_allowed.ini")
+        secondary = Arkswarm::ConfigLoader.parse_ini_file("#{__dir__}/testdata/provided_dupe_allowed2.ini")
+        merged_configs = Arkswarm::ConfigLoader.merge_configs(primary, secondary)
+        expect(merged_configs["[test]"]["content"].length).to eq(5)
+    end
   end
   
