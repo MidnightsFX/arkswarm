@@ -7,6 +7,7 @@ module Arkswarm
   VERSION = "0.1.0"
 
   ARKID='376030'.freeze
+  STEAMCMD='/steamcmd/steamcmd.sh'
   GAMEINI_MONIKER = ['game', 'gameini', 'game.ini'].freeze
   ARK_INSTANCE_VARS = %w(serverMap serverMapModId)
   GAMEUSERSETTINGSINI_MONIKER = ['gameuser', 'gameuser', 'gameusersetting', 'gameusersettings', 'gameusersettings.ini'].freeze
