@@ -30,7 +30,7 @@ module Arkswarm
         end
 
         
-        def self.install_server()
+        def self.install_server(user = nil, pass = nil)
             # Need to check if the install directories are empty first off
             if File.directory?("/server/ARK/") && File.directory?("/server/ARK-Backups/")
                 LOG.info("ARK directories already present, skipping install.")
@@ -41,9 +41,9 @@ module Arkswarm
             FileManipulator.ensure_file('/server/ARK')
             FileManipulator.ensure_file('/server/ARK-Backups')
             FileManipulator.ensure_file('/home/steam/Steam/steamapps/workshop')
-            # Create an ark instance | only one instance per service
+            # Create an ark instance | only one instance per container
             LOG.info("Starting install of ARK.")
-            LOG.info(`arkmanager install --verbose`)
+            LOG.info(`steamcmd +login #{Arkswarm.config['steamuser']} +force_install_dir /server +app_update 376030 +quit`)
             LOG.info("Ark install completed.")
             return true
         end

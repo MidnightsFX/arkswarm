@@ -11,20 +11,25 @@ RUN rm -rf /var/lib/apt/lists/* \
     && apt-get clean autoclean
 
 # Install steamcmd
-RUN useradd -m steam \
-    && su steam -c \
-        "mkdir home/steam/steamcmd \
-        && cd home/steam/steamcmd \
-        && curl 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar -vxz"
+# RUN useradd -m steam \
+#     && su steam -c \
+#         "mkdir home/steam/steamcmd \
+#         && cd home/steam/steamcmd \
+#         && curl 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar -vxz"
+
+WORKDIR /steamcmd
+RUN curl 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar -vxz
 
 # Setting user back to root
-USER root
+# USER root
 
-WORKDIR /home/steam
+# WORKDIR /home/steam
 # Install ARK server tools
-RUN curl -sL http://git.io/vtf5N | bash -s steam
-
+# RUN curl -sL http://git.io/vtf5N | bash -s steam
 COPY global.cfg /etc/arkmanager/arkmanager.cfg
+COPY main.cfg /etc/arkmanager/instances/main.cfg
+
+
 # If you are building this yourself you will need to install dependencies and build the gem locally
 # bundle install in /arkswarm, rake build to get the artifact
 COPY arkswarm/pkg/arkswarm-0.1.0.gem /gem/arkswarm-0.1.0.gem

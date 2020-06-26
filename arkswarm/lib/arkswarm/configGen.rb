@@ -2,32 +2,44 @@ module Arkswarm
   module ConfigGen
 
     # This modifies the global config
-    def self.gen_arkmanager_global_conf(ark_mgr_dir = "/etc/arkmanager", cfgname = 'arkmanager.cfg', user = nil, pass = nil)
-      user = 'anonymous' if user.nil? # This is defined here because an empty envar can be passed
-      required_lines = []
-      if user == 'anonymous'
-        required_lines << "steamlogin=anonymous"
-      else
-        required_lines << "steamlogin=\"#{user} #{pass}\""
-      end
-      contents = ConfigLoader.parse_ini_file("#{ark_mgr_dir}/#{cfgname}")
-      ConfigGen.gen_addvalues_read_write_cfg(ark_mgr_dir, cfgname, contents, required_lines)
-      
-    end
+    # def self.gen_arkmanager_global_conf(ark_mgr_dir = "/etc/arkmanager", cfgname = 'arkmanager.cfg', user = nil, pass = nil)
+    #   user = 'anonymous' if user.nil? # This is defined here because an empty envar can be passed
+    #   required_lines = []
+    #   if user == 'anonymous'
+    #     required_lines << "steamlogin=anonymous"
+    #   else
+    #     required_lines << "steamlogin=\"#{user} #{pass}\""
+    #   end
+    #   contents = ConfigLoader.parse_ini_file("#{ark_mgr_dir}/#{cfgname}")
+    #   ConfigGen.gen_addvalues_read_write_cfg(ark_mgr_dir, cfgname, contents, required_lines)
+    #   
+    # end
     
     # This will take all ENV variables with game_ and use them to generate a configuration
     # This is for the arkmanager instance configuration (IE this containers ARK, mostly deals with startup args)
-    def self.gen_arkmanager_conf(ark_mgr_dir, cfgname = 'main.cfg')
-      FileManipulator.ensure_file(ark_mgr_dir, cfgname)
-      required_lines = []
-      required_lines << "arkserverroot=/server/ARK/game"
-      ENV.keys.each do |key|
-        next unless key.include?('arkopt_') || key.include?('ark_') || key.include?('arkflag_') || ARK_INSTANCE_VARS.include?(key)
-        # key.gsub('arkopt_', '').gsub('ark_', '').gsub('arkflag_', '')
-        required_lines << "#{key}=\"#{ENV[key]}\""
-      end
-      contents = ConfigLoader.parse_ini_file("#{ark_mgr_dir}/#{cfgname}")
-      ConfigGen.gen_addvalues_read_write_cfg(ark_mgr_dir, cfgname, contents, required_lines)
+    # def self.gen_arkmanager_conf(ark_mgr_dir, cfgname = 'main.cfg')
+    #   FileManipulator.ensure_file(ark_mgr_dir, cfgname)
+    #   required_lines = []
+    #   required_lines << "arkserverroot=/server/ARK/game"
+    #   ENV.keys.each do |key|
+    #     next unless key.include?('arkopt_') || key.include?('ark_') || key.include?('arkflag_') || ARK_INSTANCE_VARS.include?(key)
+    #     # key.gsub('arkopt_', '').gsub('ark_', '').gsub('arkflag_', '')
+    #     required_lines << "#{key}=\"#{ENV[key]}\""
+    #   end
+    #   contents = ConfigLoader.parse_ini_file("#{ark_mgr_dir}/#{cfgname}")
+    #   ConfigGen.gen_addvalues_read_write_cfg(ark_mgr_dir, cfgname, contents, required_lines)
+    # end
+
+    def self.ark_startup_args()
+      map = ENV['map'].nil? ? 'TheIsland' : ENV['map']
+      session = ENV['session'].nil? ? 'Arkswarm' : ENV['session']
+      serverpass = ENV['serverpass'].nil? ? 'test1234' : ENV['serverpass']
+      adminpass = ENV['adminpass'].nil? ? 'lazyadmin' : ENV['adminpass']
+      
+      Constants.set_cfg_value('map', map)
+      Constants.set_cfg_value('session', session)
+      Constants.set_cfg_value('session', serverpass)
+      Constants.set_cfg_value('adminpass', adminpass)
     end
 
     def self.gen_game_conf(ark_cfg_dir, provided_configuration = nil)
@@ -90,11 +102,11 @@ module Arkswarm
         end
       end
       ConfigLoader.generate_config_file(contents, "#{cfg_dir}/#{cfgname}")
-      ConfigGen.readout_file(cfg_dir, cfgname)
     end
 
     # Logs the configuration file contents
     def self.readout_file(file_location, filename)
+      return false unless File.file?("#{file_location}/#{filename}")
       LOG.info("Generated #{filename} Configuration File:")
       LOG.info("#{file_location}/#{filename}")
       if Arkswarm.config[:showcfg]

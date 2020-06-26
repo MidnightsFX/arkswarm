@@ -1,6 +1,7 @@
 require "arkswarm/configGen"
 require "arkswarm/configLoader"
 require "arkswarm/fileManipulator"
+require "arkswarm/arkController"
 require "arkswarm/supervisor"
 require "arkswarm/constants"
 require "arkswarm/utils"
