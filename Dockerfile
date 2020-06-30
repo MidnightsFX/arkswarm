@@ -1,4 +1,4 @@
-FROM ruby:2.4.6-stretch
+FROM ruby:2.7.1-buster
 
 # Author MidnightsFX
 
@@ -17,7 +17,8 @@ RUN useradd -m steam \
         && cd home/steam/steamcmd \
         && curl 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar -vxz"
 
-# Setting user back to root
+# Setting user back to root & Give permission to the steam user so it can write out files in the container
+RUN usermod -aG sudo steam
 USER root
 
 WORKDIR /home/steam
@@ -25,6 +26,7 @@ WORKDIR /home/steam
 RUN curl -sL http://git.io/vtf5N | bash -s steam
 
 COPY global.cfg /etc/arkmanager/arkmanager.cfg
+COPY main.cfg /etc/arkmanager/instances/main.cfg
 COPY arkswarm/pkg/arkswarm-0.1.0.gem /gem/arkswarm-0.1.0.gem
 # Since this is a local install the dependencies need to be already installed
 RUN gem install thor

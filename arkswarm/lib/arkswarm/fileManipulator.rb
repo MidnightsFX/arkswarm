@@ -3,7 +3,7 @@ module Arkswarm
     module FileManipulator
 
         # walks the filepath and if there is no file/folder there it will generate them, does nothing if they exist
-        def self.ensure_file(location, filename = nil)
+        def self.ensure_file(location, filename = nil, enfore_permissions = true)
             ug_info = File.stat('/home/steam/steamcmd/steamcmd.sh')
             folder_location = '/'
             location.split('/').each do |segment|
@@ -11,13 +11,13 @@ module Arkswarm
                 folder_location = folder_location + segment + "/"
                 next if Dir.exist?(folder_location) # do nothing if this folder exists
                 Dir.mkdir(folder_location)
-                File.chown(ug_info.uid, ug_info.gid, folder_location)
+                File.chown(ug_info.uid, ug_info.gid, folder_location) if enfore_permissions
             end
             if filename
                 # If the file does not exist make a blank one. This is primarily for first gen, when nothing exists
                 if !File.exist?(location + '/' + filename)
                     File.new(location + '/' + filename, 'w')
-                    File.chown(ug_info.uid, ug_info.gid, location + '/' + filename)
+                    File.chown(ug_info.uid, ug_info.gid, location + '/' + filename) if enfore_permissions
                 end
             end
         end
@@ -43,7 +43,7 @@ module Arkswarm
             FileManipulator.ensure_file('/home/steam/Steam/steamapps/workshop')
             # Create an ark instance | only one instance per service
             LOG.info("Starting install of ARK.")
-            LOG.info(`arkmanager install --verbose`)
+            `arkmanager install --verbose`
             LOG.info("Ark install completed.")
             return true
         end
