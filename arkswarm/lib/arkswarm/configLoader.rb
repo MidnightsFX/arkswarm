@@ -36,6 +36,7 @@ module Arkswarm
                     else
                         LOG.debug("Found a non-empty, non-header line to add to a section: #{line}")
                         line_contents = line.split("=")
+                        line_contents << "" if line_contents.length == 1
                         file_contents[current_section]["content"] << line_contents
                         file_contents[current_section]["keys"] << line_contents[0]
                     end
@@ -71,6 +72,8 @@ module Arkswarm
                     LOG.debug("primary & secondary key #{key} found merging")
                     # gotta merge in the key
                     secondary[key]['content'].each do |entry|
+                        next if entry[0].nil? # nothing to merge if the entry is nil, but how did you get here anyways?
+                        LOG.debug("Merging entry: #{entry}")
                         # if the key can be a duplicated, it just gets added 
                         # or if it is a space, it also just gets added, so we can merge configs with spaces in them easier
                         if DUPLICATABLE_KEYS.include?(entry[0]) || entry[0].empty? 
@@ -81,13 +84,10 @@ module Arkswarm
                         elsif merged_hash[key]['keys'].include?(entry[0]) # its a non-duplicatable key, that already exists, needs its value updated
                             LOG.debug("Non-duplicatable key #{entry[0]} found, taking preferred value")
                             merged_hash[key]['content'].each do |prime_entry|
-                                LOG.debug("Looking for primary key #{entry[0]} == #{prime_entry[0]} | #{prime_entry[0] == entry[0]}")
+                                # LOG.debug("Looking for primary key #{entry[0]} == #{prime_entry[0]} | #{prime_entry[0] == entry[0]}")
                                 next unless prime_entry[0] == entry[0]
                                 LOG.debug("Found key: Setting #{entry[1]}")
-                                unless prime_entry[1].t_s.casecmp(entry[1].to_s).zero?
-                                    LOG.debug("Primary key needs updating: previous: #{prime_entry[1]}, new: #{entry[1]}")
-                                    prime_entry[1] = entry[1].to_s # set the value to the new value
-                                end
+                                prime_entry[1] = entry[1]
                                 break
                             end
                         else # the section exists, but doesn't contain the provided key- add it

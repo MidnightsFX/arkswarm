@@ -45,14 +45,12 @@ module Arkswarm
 
     # Run-once check for an update, if an update is available will update and start back up
     def self.check_for_updates
-        update_res = `arkmanager checkupdate`
-        # update_status = $?.exitstatus
-        mod_update_needed = `arkmanager checkmodupdate --revstatus`
-        # mod_update_status = $?.exitstatus
+        LOG.debug('Starting Checks for updates.')
+        update_res = system("arkmanager checkupdate") # update_status = $?.exitstatus
+        mod_update_needed = system("arkmanager checkmodupdate --revstatus") # mod_update_status = $?.exitstatus
         LOG.debug("Updates Statuses: ARK-#{update_res} MODS-#{mod_update_needed}")
-        if update_res == true && mod_update_needed == true
-          # if update_status.to_i.zero? && mod_update_status.to_i.zero?
-          LOG.info('No Update needed, sleeping.')
+        if update_res == true && mod_update_needed == true # if update_status.to_i.zero? && mod_update_status.to_i.zero?
+          LOG.info('No Update needed.')
           return false
         end
     
@@ -67,11 +65,13 @@ module Arkswarm
     end
 
     def self.first_run(new_server_status)
+      LOG.debug("Starting server firstrun check")
       if new_server_status
         LOG.info("Updating ARK")
-        LOG.info(`arkmanager update --verbose`)
-        LOG.info("Installing Mods, this can take a while.") 
-        LOG.info(`arkmanager installmods --verbose`)
+        arkupdate = system("arkmanager update --verbose")
+        LOG.info("Installing Mods, this can take a while.")
+        arkmods = system("arkmanager installmods --verbose")
+        LOG.info("Status of updates: ARK:#{arkupdate} MODS:#{arkmods}")
       end
       
       # Check status of the server, this should complain about mods which are not installed if we need to install mods
