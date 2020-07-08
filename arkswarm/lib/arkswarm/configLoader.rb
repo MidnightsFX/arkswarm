@@ -56,7 +56,9 @@ module Arkswarm
             files.each do |file|
                 parsed_file = ConfigLoader.parse_ini_file(file)
                 config_mash = ConfigLoader.merge_configs(config_mash, parsed_file)
+                LOG.debug("Merging configuration file provided for discovery #{file}")
             end
+            LOG.debug("Returning merged configuration with keys: #{config_mash.keys}")
             return config_mash
         end
 
