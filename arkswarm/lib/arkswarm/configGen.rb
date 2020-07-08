@@ -77,6 +77,7 @@ module Arkswarm
         # Merge everything but "[/script/shootergame.shootergamemode]" which is for game
         merged_configuration = ConfigLoader.merge_configs(primary_config, provided_configuration.tap {|hs| hs.delete(shootergame_key)})
       end
+      LOG.debug("Returning merged configuration.")
       return merged_configuration
     end
 
