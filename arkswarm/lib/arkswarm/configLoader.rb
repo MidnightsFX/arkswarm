@@ -79,8 +79,11 @@ module Arkswarm
                         elsif merged_hash[key]['keys'].include?(entry[0]) # its a non-duplicatable key, that already exists, needs its value updated
                             LOG.debug("Non-duplicatable key #{entry[0]} found, taking preferred value")
                             merged_hash[key]['content'].each do |prime_entry|
+                                LOG.debug("Looking for primary key #{entry[0]} == #{prime_entry[0]} | #{prime_entry[0] == entry[0]}")
                                 next unless prime_entry[0] == entry[0]
+                                LOG.debug("Found key: Setting #{entry[1]}")
                                 prime_entry[1] = entry[1] # set the value to the new value
+                                break
                             end
                         else # the section exists, but doesn't contain the provided key- add it
                             LOG.debug("New key #{entry[0]} found, adding value")
