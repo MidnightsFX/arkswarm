@@ -84,7 +84,10 @@ module Arkswarm
                                 LOG.debug("Looking for primary key #{entry[0]} == #{prime_entry[0]} | #{prime_entry[0] == entry[0]}")
                                 next unless prime_entry[0] == entry[0]
                                 LOG.debug("Found key: Setting #{entry[1]}")
-                                prime_entry[1] = entry[1] # set the value to the new value
+                                unless prime_entry[1].t_s.casecmp(entry[1].to_s).zero?
+                                    LOG.debug("Primary key needs updating: previous: #{prime_entry[1]}, new: #{entry[1]}")
+                                    prime_entry[1] = entry[1].to_s # set the value to the new value
+                                end
                                 break
                             end
                         else # the section exists, but doesn't contain the provided key- add it

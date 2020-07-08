@@ -2,27 +2,32 @@ module Arkswarm
   module Supervisor
 
     def self.main_loop(options)
-      Arkswarm.set_cfg_value(:showcfg, options[:showcfg])
-      # Start by generating or regenerating configurations
-      # Check for steam user (steam user is required to run DLC maps, Extinction, Aberration_P, ScorchedEarth_P)
-      ConfigGen.gen_arkmanager_global_conf("/etc/arkmanager", 'arkmanager.cfg', ENV['steam_user'], ENV['steam_pass'])
-      ConfigGen.gen_arkmanager_conf('/etc/arkmanager/instances')
-      # Check if there is an ARK installation already
-      new_server_status = FileManipulator.install_server()
+      begin
+        Arkswarm.set_cfg_value(:showcfg, options[:showcfg])
+        # Start by generating or regenerating configurations
+        # Check for steam user (steam user is required to run DLC maps, Extinction, Aberration_P, ScorchedEarth_P)
+        ConfigGen.gen_arkmanager_global_conf("/etc/arkmanager", 'arkmanager.cfg', ENV['steam_user'], ENV['steam_pass'])
+        ConfigGen.gen_arkmanager_conf('/etc/arkmanager/instances')
+        # Check if there is an ARK installation already
+        new_server_status = FileManipulator.install_server()
 
-      # Generate Game configurations
-      config_location = '/server/ARK/game/ShooterGame/Saved/Config/LinuxServer'
-      provided_configs = ConfigLoader.discover_configurations('/config')
-      ConfigGen.gen_game_conf(config_location, provided_configs)
-      ConfigGen.gen_game_user_conf(config_location, provided_configs)
+        # Generate Game configurations
+        config_location = '/server/ARK/game/ShooterGame/Saved/Config/LinuxServer'
+        provided_configs = ConfigLoader.discover_configurations('/config')
+        ConfigGen.gen_game_conf(config_location, provided_configs)
+        ConfigGen.gen_game_user_conf(config_location, provided_configs)
 
-      # Handle Validation CLI option
-      FileManipulator.validate_gamefiles(options[:validate])
+        # Handle Validation CLI option
+        FileManipulator.validate_gamefiles(options[:validate])
 
-      # start service
-      # check if update is available
-      #  - wait until server is idle to update
-      Supervisor.run_server(new_server_status)
+        # start service
+        # check if update is available
+        #  - wait until server is idle to update
+        Supervisor.run_server(new_server_status)
+      rescue => e
+        LOG.error("Encounted Runtime Error: #{e.message}")
+        LOG.error("Trace: #{e.backtrace.inspect}")
+      end
     end
 
     # Loops running the server process
