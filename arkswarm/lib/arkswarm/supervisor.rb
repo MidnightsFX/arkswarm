@@ -31,7 +31,7 @@ module Arkswarm
       loop do
         # check for updates, restart server if needed, this should block if updates are required
         Supervisor.check_for_updates()
-        36.times do # sleep 3600 # sleep one hour
+        9.times do # sleep 900 # sleep 15 minutes
           LOG.info("#{`arkmanager status`}")
           sleep 100
         end
@@ -41,18 +41,22 @@ module Arkswarm
     # Run-once check for an update, if an update is available will update and start back up
     def self.check_for_updates
         update_res = `arkmanager checkupdate`
-        update_status = $?.exitstatus
+        # update_status = $?.exitstatus
         mod_update_needed = `arkmanager checkmodupdate --revstatus`
-        mod_update_status = $?.exitstatus
-        if update_status.to_i.zero? && mod_update_status.to_i.zero?
+        # mod_update_status = $?.exitstatus
+        LOG.debug("Updates Statuses: ARK-#{update_res} MODS-#{mod_update_needed}")
+        if update_res == true && mod_update_needed == true
+          # if update_status.to_i.zero? && mod_update_status.to_i.zero?
           LOG.info('No Update needed, sleeping.')
           return false
         end
     
         LOG.info('Update Queued, waiting for the server to empty')
         update_status = `arkmanager update --ifempty --validate --saveworld --verbose`
+        LOG.info("Ark Update Status: #{update_status}")
         install_mods = `arkmanager installmods --verbose`
         update_mods = `arkmanager update --update-mods --verbose`
+        LOG.info("Ark Mods Update Status: #{update_mods}")
         start_status = `arkmanager start --alwaysrestart --verbose`
         return true
     end
