@@ -26,7 +26,7 @@ module Arkswarm
         def self.validate_gamefiles(validate_status)
             return false unless validate_status
             LOG.info("Validating gamefiles and mods, this can take a while.")
-            `arkmanager update --validate --update-mods`
+            system("arkmanager update --validate --update-mods")
         end
 
         

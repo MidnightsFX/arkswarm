@@ -23,7 +23,7 @@ module Arkswarm
         # start service
         # check if update is available
         #  - wait until server is idle to update
-        Supervisor.run_server(new_server_status)
+        Supervisor.run_server(new_server_status, options[:showstatus])
       rescue => e
         LOG.error("Encounted Runtime Error: #{e.message}")
         LOG.error("Trace: #{e.backtrace.inspect}")
@@ -31,7 +31,8 @@ module Arkswarm
     end
 
     # Loops running the server process
-    def self.run_server(new_server_status)
+    def self.run_server(new_server_status, logstatus = true)
+      LOG.debug("Starting server monitoring loop")
       Supervisor.first_run(new_server_status) # this will start up the server, it can take quite a while to update/get started.
       loop do
         # check for updates, restart server if needed, this should block if updates are required
@@ -39,6 +40,7 @@ module Arkswarm
         9.times do # sleep 900 # sleep 15 minutes
           LOG.info("#{`arkmanager status`}")
           sleep 100
+          # check about restarting the server if its status is offline
         end
       end
     end
@@ -46,10 +48,12 @@ module Arkswarm
     # Run-once check for an update, if an update is available will update and start back up
     def self.check_for_updates
         LOG.debug('Starting Checks for updates.')
-        update_res = system("arkmanager checkupdate") # update_status = $?.exitstatus
-        mod_update_needed = system("arkmanager checkmodupdate --revstatus") # mod_update_status = $?.exitstatus
-        LOG.debug("Updates Statuses: ARK-#{update_res} MODS-#{mod_update_needed}")
-        if update_res == true && mod_update_needed == true # if update_status.to_i.zero? && mod_update_status.to_i.zero?
+        update_res = `arkmanager checkupdate` # update_status = $?.exitstatus
+        update_status = $?.exitstatus
+        mod_update_needed = `arkmanager checkmodupdate --revstatus` # mod_update_status = $?.exitstatus
+        mod_update_status = $?.exitstatus
+        LOG.debug("Updates Statuses: ARK-#{!update_status.to_i.zero?} MODS-#{!mod_update_status.to_i.zero?}")
+        if update_status.to_i.zero? && mod_update_status.to_i.zero?
           LOG.info('No Update needed.')
           return false
         end
