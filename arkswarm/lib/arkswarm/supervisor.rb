@@ -38,7 +38,7 @@ module Arkswarm
         # check for updates, restart server if needed, this should block if updates are required
         Supervisor.check_for_updates()
         9.times do # sleep 900 # sleep 15 minutes
-          LOG.info("#{`arkmanager status`}")
+          LOG.info("#{`arkmanager status`}") if logstatus
           sleep 100
           # check about restarting the server if its status is offline
         end
