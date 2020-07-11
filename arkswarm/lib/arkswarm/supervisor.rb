@@ -36,7 +36,7 @@ module Arkswarm
       Supervisor.first_run(new_server_status) # this will start up the server, it can take quite a while to update/get started.
       loop do
         # check for updates, restart server if needed, this should block if updates are required
-        Supervisor.check_for_updates()
+        Supervisor.check_for_updates(logstatus)
         9.times do # sleep 900 # sleep 15 minutes
           LOG.info("#{`arkmanager status`}") if logstatus
           sleep 100
@@ -46,7 +46,7 @@ module Arkswarm
     end
 
     # Run-once check for an update, if an update is available will update and start back up
-    def self.check_for_updates
+    def self.check_for_updates(logstatus)
         LOG.debug('Starting Checks for updates.')
         update_res = `arkmanager checkupdate` # update_status = $?.exitstatus
         update_status = $?.exitstatus
@@ -54,7 +54,7 @@ module Arkswarm
         mod_update_status = $?.exitstatus
         LOG.debug("Updates Statuses: ARK-#{!update_status.to_i.zero?} MODS-#{!mod_update_status.to_i.zero?}")
         if update_status.to_i.zero? && mod_update_status.to_i.zero?
-          LOG.info('No Update needed.')
+          LOG.info('No Update needed.') if logstatus
           return false
         end
     
@@ -64,7 +64,7 @@ module Arkswarm
         install_mods = `arkmanager installmods --verbose`
         update_mods = `arkmanager update --update-mods --verbose`
         LOG.info("Ark Mods Update Status: #{update_mods}")
-        start_status = `arkmanager start --alwaysrestart --verbose`
+        start_status = `arkmanager start --verbose`
         return true
     end
 
@@ -97,7 +97,7 @@ module Arkswarm
     
       # TODO: setup a backoff for server restart, and integrate discord messaging on failures
       LOG.info("Starting server.")
-      start_server = `arkmanager start --alwaysrestart --verbose`
+      start_server = `arkmanager start --verbose`
       return start_server
     end
   
