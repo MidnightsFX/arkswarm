@@ -17,6 +17,9 @@ module Arkswarm
         ConfigGen.gen_game_conf(config_location, provided_configs)
         ConfigGen.gen_game_user_conf(config_location, provided_configs)
 
+        # Read some required config values into this instances settings, ideally these are always what the server runs with
+        
+
         # Handle Validation CLI option
         FileManipulator.validate_gamefiles(options[:validate])
 
@@ -57,7 +60,8 @@ module Arkswarm
           LOG.info('No Update needed.') if logstatus
           return false
         end
-    
+        RconExecutor.new()
+
         LOG.info('Update Queued, waiting for the server to empty')
         update_status = `arkmanager update --ifempty --validate --saveworld --verbose`
         LOG.info("Ark Update Status: #{update_status}")
