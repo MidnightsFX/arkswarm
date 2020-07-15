@@ -22,6 +22,7 @@ RUN usermod -aG sudo steam
 USER root
 
 WORKDIR /home/steam
+
 # Install ARK server tools
 RUN curl -sL http://git.io/vtf5N | bash -s steam
 

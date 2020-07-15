@@ -46,7 +46,7 @@ module Arkswarm
     end
 
     # Run-once check for an update, if an update is available will update and start back up
-    def self.check_for_updates(logstatus)
+    def self.check_for_updates(logstatus = true)
         LOG.debug('Starting Checks for updates.')
         update_res = `arkmanager checkupdate` # update_status = $?.exitstatus
         update_status = $?.exitstatus
