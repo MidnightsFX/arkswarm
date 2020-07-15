@@ -52,7 +52,7 @@ module Arkswarm
       end
       contents = ConfigLoader.parse_ini_file("#{ark_cfg_dir}/#{cfgname}")
       game_cfg = ConfigGen.merge_config_by_type(:game, contents, provided_configuration) unless provided_configuration.nil?
-      ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, game_cfg, required_lines)
+      return ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, game_cfg, required_lines)
     end
 
     # This will take all ENV variables with gameuser_ and use them to generate a configuration
@@ -66,7 +66,7 @@ module Arkswarm
       end
       contents = ConfigLoader.parse_ini_file("#{ark_cfg_dir}/#{cfgname}")
       game_user_cfg = ConfigGen.merge_config_by_type(:gameini, contents, provided_configuration) unless provided_configuration.nil?
-      ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, game_user_cfg, required_lines)
+      return ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, game_user_cfg, required_lines)
     end
 
     # merges the total jumble of configs into the correct places
@@ -90,6 +90,7 @@ module Arkswarm
         # Merge everything but "[/script/shootergame.shootergamemode]" which is for game
         merged_configuration = ConfigLoader.merge_configs(primary_config, provided_configuration.tap {|hs| hs.delete(shootergame_key)})
       end
+      LOG.debug("Returning merged configuration.")
       return merged_configuration
     end
 
@@ -102,6 +103,8 @@ module Arkswarm
         end
       end
       ConfigLoader.generate_config_file(contents, "#{cfg_dir}/#{cfgname}")
+      ConfigGen.readout_file(cfg_dir, cfgname)
+      return contents # Final contents of file
     end
 
     # Logs the configuration file contents
