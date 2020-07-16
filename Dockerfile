@@ -20,14 +20,6 @@ RUN rm -rf /var/lib/apt/lists/* \
 WORKDIR /steamcmd
 RUN curl 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar -vxz
 
-# Setting user back to root
-# USER root
-
-# WORKDIR /home/steam
-# Install ARK server tools
-# RUN curl -sL http://git.io/vtf5N | bash -s steam
-COPY global.cfg /etc/arkmanager/arkmanager.cfg
-COPY main.cfg /etc/arkmanager/instances/main.cfg
 
 
 # If you are building this yourself you will need to install dependencies and build the gem locally
@@ -35,6 +27,7 @@ COPY main.cfg /etc/arkmanager/instances/main.cfg
 COPY arkswarm/pkg/arkswarm-0.1.0.gem /gem/arkswarm-0.1.0.gem
 # Since this is a local install the dependencies need to be already installed
 RUN gem install thor
+RUN gem install rconrb
 RUN gem install --local /gem/arkswarm-0.1.0.gem
 
 # Use a persistent volume for game data, setup, saves and backups

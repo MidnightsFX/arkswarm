@@ -1,7 +1,7 @@
 require 'rcon'
 
 module Arkswarm
-    class RconExecutor
+    class RconInstance
         @client = nil
 
         def self.initialize(host: host, port: port, password: password)
@@ -13,6 +13,11 @@ module Arkswarm
             return client.execute("#{cmd}")
         end
     end
+
+    # Instanceless master executor? since we are just managing one server per container
+    # module RconExecutor
+    #     
+    # end
 end
 
 

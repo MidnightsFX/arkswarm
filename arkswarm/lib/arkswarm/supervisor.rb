@@ -6,6 +6,12 @@ module Arkswarm
         # Check for steam user (steam user is required to run DLC maps, Extinction, Aberration_P, ScorchedEarth_P)
         ArkController.set_steam_user(ENV['steam_user'], ENV['steam_pass'])
         Arkswarm.set_cfg_value(:showcfg, options[:showcfg])
+
+        # Ingest Configuration
+        provided_configs = ConfigLoader.discover_configurations('/config')
+
+        # Build startup command
+        Arkswarm.set_cfg_value(:start_server_cmd, StartupManager.build_startup_cmd(provided_configs))
         
         # Check if there is an ARK installation already
         new_server_status = FileManipulator.install_server()
@@ -13,7 +19,6 @@ module Arkswarm
         # Generate Game configurations
         unless options[:skipgen]
           config_location = '/server/ARK/game/ShooterGame/Saved/Config/LinuxServer'
-          provided_configs = ConfigLoader.discover_configurations('/config')
           ConfigGen.gen_game_conf(config_location, provided_configs)
           ConfigGen.gen_game_user_conf(config_location, provided_configs)
         end
@@ -69,7 +74,7 @@ module Arkswarm
         update_mods = `arkmanager update --update-mods --verbose`
         LOG.info('Checking for mod to update')
         LOG.info(update_mods)
-        start_status = `arkmanager start --alwaysrestart --verbose`
+        start_status = `#{Arkswarm.config[:start_server_cmd]}`
         return true
     end
 
@@ -102,7 +107,7 @@ module Arkswarm
     
       # TODO: setup a backoff for server restart, and integrate discord messaging on failures
       LOG.info("Starting server.")
-      start_server = `arkmanager start --verbose`
+      start_server = `#{Arkswarm.config[:start_server_cmd]}`
       return start_server
     end
   

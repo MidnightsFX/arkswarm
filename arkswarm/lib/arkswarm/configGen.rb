@@ -1,35 +1,6 @@
 module Arkswarm
   module ConfigGen
 
-    # This modifies the global config
-    # def self.gen_arkmanager_global_conf(ark_mgr_dir = "/etc/arkmanager", cfgname = 'arkmanager.cfg', user = nil, pass = nil)
-    #   user = 'anonymous' if user.nil? # This is defined here because an empty envar can be passed
-    #   required_lines = []
-    #   if user == 'anonymous'
-    #     required_lines << "steamlogin=anonymous"
-    #   else
-    #     required_lines << "steamlogin=\"#{user} #{pass}\""
-    #   end
-    #   contents = ConfigLoader.parse_ini_file("#{ark_mgr_dir}/#{cfgname}")
-    #   ConfigGen.gen_addvalues_read_write_cfg(ark_mgr_dir, cfgname, contents, required_lines)
-    #   
-    # end
-    
-    # This will take all ENV variables with game_ and use them to generate a configuration
-    # This is for the arkmanager instance configuration (IE this containers ARK, mostly deals with startup args)
-    # def self.gen_arkmanager_conf(ark_mgr_dir, cfgname = 'main.cfg')
-    #   FileManipulator.ensure_file(ark_mgr_dir, cfgname)
-    #   required_lines = []
-    #   required_lines << "arkserverroot=/server/ARK/game"
-    #   ENV.keys.each do |key|
-    #     next unless key.include?('arkopt_') || key.include?('ark_') || key.include?('arkflag_') || ARK_INSTANCE_VARS.include?(key)
-    #     # key.gsub('arkopt_', '').gsub('ark_', '').gsub('arkflag_', '')
-    #     required_lines << "#{key}=\"#{ENV[key]}\""
-    #   end
-    #   contents = ConfigLoader.parse_ini_file("#{ark_mgr_dir}/#{cfgname}")
-    #   ConfigGen.gen_addvalues_read_write_cfg(ark_mgr_dir, cfgname, contents, required_lines)
-    # end
-
     def self.ark_startup_args()
       map = ENV['map'].nil? ? 'TheIsland' : ENV['map']
       session = ENV['session'].nil? ? 'Arkswarm' : ENV['session']
@@ -45,34 +16,30 @@ module Arkswarm
     def self.gen_game_conf(ark_cfg_dir, provided_configuration = nil)
       cfgname = 'Game.ini'
       FileManipulator.ensure_file(ark_cfg_dir, cfgname)
-      required_lines = []
-      ENV.keys.each do |key|
-        next unless key.include?('arkgame_')
-        required_lines << "#{key.gsub('arkgame_', '')}=#{ENV[key]}"
-      end
+      env_cfg = ConfigGen.build_cfg_from_envs('arkgame_', '[/script/shootergame.shootergamemode]')
       contents = ConfigLoader.parse_ini_file("#{ark_cfg_dir}/#{cfgname}")
       game_cfg = ConfigGen.merge_config_by_type(:game, contents, provided_configuration) unless provided_configuration.nil?
-      return ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, game_cfg, required_lines)
+      final_game_cfg = ConfigGen.merge_config_by_type(:game, game_cfg, env_cfg)
+      return ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, final_game_cfg)
     end
 
     # This will take all ENV variables with gameuser_ and use them to generate a configuration
     def self.gen_game_user_conf(ark_cfg_dir, provided_configuration = nil)
       cfgname = "GameUserSettings.ini"
       FileManipulator.ensure_file(ark_cfg_dir, cfgname)
-      required_lines = []
-      ENV.keys.each do |key|
-        next unless key.include?('gameuser_')
-        required_lines << "#{key.gsub('gameuser_', '')}=#{ENV[key]}"
-      end
+      env_cfg = ConfigGen.build_cfg_from_envs('gameuser_', '[serversettings]')
       contents = ConfigLoader.parse_ini_file("#{ark_cfg_dir}/#{cfgname}")
       game_user_cfg = ConfigGen.merge_config_by_type(:gameini, contents, provided_configuration) unless provided_configuration.nil?
-      return ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, game_user_cfg, required_lines)
+      final_gameuser_cfg = ConfigGen.merge_config_by_type(:game, game_user_cfg, env_cfg)
+      return ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, final_gameuser_cfg)
     end
 
     # merges the total jumble of configs into the correct places
     def self.merge_config_by_type(type, primary_config, provided_configuration)
       merged_configuration = {}
       shootergame_key = provided_configuration.keys.find {|k|  k.downcase == '[/script/shootergame.shootergamemode]'}
+      startup_args_key = provided_configuration.keys.find {|k|  k.downcase == '[startup_args]'}
+      startup_flags_key = provided_configuration.keys.find {|k|  k.downcase == '[startup_flags]'}
       if type == :game
         # merge only '[/script/shootergame.shootergamemode]', does nothing if that doesnt exist
         LOG.debug("Checking for shootergame key: #{provided_configuration.keys} found? #{shootergame_key}")
@@ -87,21 +54,32 @@ module Arkswarm
           merged_configuration = ConfigLoader.merge_configs(shooter_cfg, cased_provided_cfg)
         end
       else
-        # Merge everything but "[/script/shootergame.shootergamemode]" which is for game
-        merged_configuration = ConfigLoader.merge_configs(primary_config, provided_configuration.tap {|hs| hs.delete(shootergame_key)})
+        # Merge everything but "[/script/shootergame.shootergamemode]" which is for game and "[startup]" which is for startup arguments
+        cfg = Util.hash_remove_keys(provided_configuration, shootergame_key, startup_key, startup_flags_key)
+        merged_configuration = ConfigLoader.merge_configs(primary_config, cfg)
       end
       LOG.debug("Returning merged configuration.")
       return merged_configuration
     end
 
-    # Adds required values to the contents, generates a new config file and writes it out, and then reads it to the logger
-    def self.gen_addvalues_read_write_cfg(cfg_dir, cfgname, contents, required_lines = nil)
-      unless required_lines.empty?
-        required_lines.each do |req_line|
-          kv = req_line.split("=")
-          ConfigLoader.update_cfg_value(contents, kv[0], kv[1])
-        end
+    # Takes a specified partial key and searches ENV variables for those, then builds a sectioned hash based on them
+    def self.build_cfg_from_envs(env_key_partial, section_header = 'ungrouped')
+      partial_key = env_key_partial.downcase
+      env_hash = {}
+      env_hash[section_header] = { "content" => [], "keys" => [] }
+      ENV.keys.each do |key|
+        next unless key.include?("#{partial_key}")
+        line_contents = "#{key.gsub("#{partial_key}", '')}=#{ENV[key]}".split("=")
+        line_contents << "" if line_contents.length == 1
+        env_hash[section_header]["content"] << line_contents
+        env_hash[section_header]["keys"] << "#{key.gsub("#{partial_key}"
       end
+      LOG.debug("Build ENV Hash: #{env_hash}")
+      return env_hash
+    end
+
+    # Adds required values to the contents, generates a new config file and writes it out, and then reads it to the logger
+    def self.gen_addvalues_read_write_cfg(cfg_dir, cfgname, contents)
       ConfigLoader.generate_config_file(contents, "#{cfg_dir}/#{cfgname}")
       ConfigGen.readout_file(cfg_dir, cfgname)
       return contents # Final contents of file
