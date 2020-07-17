@@ -26,11 +26,12 @@ module Arkswarm
         def self.validate_gamefiles(validate_status)
             return false unless validate_status
             LOG.info("Validating gamefiles and mods, this can take a while.")
-            system("arkmanager update --validate --update-mods")
+            ArkController.update_install_ark(true) #update/install & validate ARK
+            ArkController.check_mods_and_update(true) # update & validate Mods
         end
 
         
-        def self.install_server()
+        def self.install_server(validate = false)
             # Need to check if the install directories are empty first off
             if File.directory?("/server/ARK/") && File.directory?("/server/ARK-Backups/")
                 LOG.info("ARK directories already present, skipping install.")
@@ -43,7 +44,8 @@ module Arkswarm
             FileManipulator.ensure_file('/home/steam/Steam/steamapps/workshop')
             # Create an ark instance | only one instance per container
             LOG.info("Starting install of ARK.")
-            LOG.info(`#{STEAMCMD} +login #{Arkswarm.config['steamuser']} +force_install_dir /server +app_update 376030 +quit`)
+            #LOG.info(`#{STEAMCMD} +login #{Arkswarm.config['steamuser']} +force_install_dir /server +app_update 376030 +quit`)
+            ArkController.update_install_ark(validate)
             LOG.info("Ark install completed.")
             return true
         end

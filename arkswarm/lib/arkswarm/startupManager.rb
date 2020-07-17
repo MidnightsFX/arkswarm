@@ -13,6 +13,14 @@ module Arkswarm
             startup_args = ConfigGen.merge_configs(startup_args_env, provided_configs[startup_args_key])
             startup_flags = ConfigGen.merge_configs(startup_flags_env, provided_configs[startup_flags_key])
 
+            # If mods are defined in the configuration set them so their IDs can be used later to check for updates etc
+            if startup_args['keys'].include?("GameModIds")
+                mods = arr_select(startup_args['content'], "GameModIds")
+                Arkswarm.set_cfg_value(:mods, mods[1].split(','))
+            else
+                Arkswarm.set_cfg_value(:mods, nil)
+            end
+
             return StartupManager.build_server_args(startup_args, startup_flags)
         end
 

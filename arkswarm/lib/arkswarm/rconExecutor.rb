@@ -14,6 +14,11 @@ module Arkswarm
         end
     end
 
+    def self.connect_to_rcon()
+        rcon_connection = RconInstance.new(host: 'localhost', port: Arkswarm.config[:rcon_port], pass: Arkswarm.config[:admin_pass])
+        Arkswarm.config[:rcon_client] = rcon_connection
+    end
+
     # Instanceless master executor? since we are just managing one server per container
     # module RconExecutor
     #     

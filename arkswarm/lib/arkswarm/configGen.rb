@@ -1,15 +1,26 @@
 module Arkswarm
   module ConfigGen
 
-    def self.ark_startup_args()
-      map = ENV['map'].nil? ? 'TheIsland' : ENV['map']
-      session = ENV['session'].nil? ? 'Arkswarm' : ENV['session']
-      serverpass = ENV['serverpass'].nil? ? 'test1234' : ENV['serverpass']
+    def self.set_ark_globals(game_cfg, gameuser_cfg)
+      # These only comes from ENV values
+      serverMap = ENV['serverMap'].nil? ? 'TheIsland' : ENV['serverMap'] 
+      sessionName = ENV['sessionName'].nil? ? 'Arkswarm' : ENV['sessionName']
+
+      srv_pass = Util.arr_select(gameuser_cfg['ServerSettings'], 'ServerPassword')
+      user_srv_pass = if srv_pass.empty?
+                        ''
+                      else
+                        srv_pass[1]
+                      end
+      ServerPassword
+
       adminpass = ENV['adminpass'].nil? ? 'lazyadmin' : ENV['adminpass']
+
+      game_cfg
       
       Constants.set_cfg_value('map', map)
-      Constants.set_cfg_value('session', session)
-      Constants.set_cfg_value('session', serverpass)
+      Constants.set_cfg_value('sessionname', serverMap)
+      Constants.set_cfg_value('serverpass', user_srv_pass)
       Constants.set_cfg_value('adminpass', adminpass)
     end
 
@@ -20,18 +31,20 @@ module Arkswarm
       contents = ConfigLoader.parse_ini_file("#{ark_cfg_dir}/#{cfgname}")
       game_cfg = ConfigGen.merge_config_by_type(:game, contents, provided_configuration) unless provided_configuration.nil?
       final_game_cfg = ConfigGen.merge_config_by_type(:game, game_cfg, env_cfg)
-      return ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, final_game_cfg)
+      ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, final_game_cfg)
+      return final_game_cfg
     end
 
     # This will take all ENV variables with gameuser_ and use them to generate a configuration
     def self.gen_game_user_conf(ark_cfg_dir, provided_configuration = nil)
-      cfgname = "GameUserSettings.ini"
+      cfgname = 'GameUserSettings.ini'
       FileManipulator.ensure_file(ark_cfg_dir, cfgname)
       env_cfg = ConfigGen.build_cfg_from_envs('gameuser_', '[serversettings]')
       contents = ConfigLoader.parse_ini_file("#{ark_cfg_dir}/#{cfgname}")
       game_user_cfg = ConfigGen.merge_config_by_type(:gameini, contents, provided_configuration) unless provided_configuration.nil?
       final_gameuser_cfg = ConfigGen.merge_config_by_type(:game, game_user_cfg, env_cfg)
-      return ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, final_gameuser_cfg)
+      ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, final_gameuser_cfg)
+      return final_gameuser_cfg
     end
 
     # merges the total jumble of configs into the correct places

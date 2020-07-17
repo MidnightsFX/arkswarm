@@ -11,7 +11,6 @@ class CLI < Thor
     option :showcfg, type: :boolean, default: true, desc: "Print generated configurations during startup"
     option :debug, type: :boolean, default: false, desc: "Enables debug level logging."
     option :showstatus, type: :boolean, default: true, desc: "Toggle showing of server status on a frequent interval in logs."
-    option :skipgen, type: :boolean, default: false, desc: "Skip Configuration Generation"
     def start
         Arkswarm.set_debug if options[:debug]
         # kick off startup workflow and watcher
