@@ -4,15 +4,8 @@ module Arkswarm
         # Collect ENV variables arkflag_ & arkarg_
         # Collect configuration defined in [STARTUP_ARGS] ARGS FLAGS
         def self.build_startup_cmd(provided_configs)
-            startup_args_key = provided_configs.keys.find {|k|  k.downcase == '[startup_args]'}
-            startup_flags_key = provided_configs.keys.find {|k|  k.downcase == '[startup_flags]'}
-
-            startup_args_env = ConfigGen.build_cfg_from_envs('arkarg_', '[startup_args]')
-            startup_flags_env = ConfigGen.build_cfg_from_envs('arkflag_', '[startup_flags]')
-
-            startup_args = ConfigGen.merge_configs(startup_args_env, provided_configs[startup_args_key])
-            startup_flags = ConfigGen.merge_configs(startup_flags_env, provided_configs[startup_flags_key])
-
+            startup_flags = StartupManager.collect_startup_flags(provided_configs)
+            startup_args = StartupManager.collect_startup_args(provided_configs)
             # If mods are defined in the configuration set them so their IDs can be used later to check for updates etc
             if startup_args['keys'].include?("GameModIds")
                 mods = arr_select(startup_args['content'], "GameModIds")
@@ -20,8 +13,27 @@ module Arkswarm
             else
                 Arkswarm.set_cfg_value(:mods, nil)
             end
+            full_start_cmd = StartupManager.build_server_args(startup_args, startup_flags)
+            Arkswarm.set_cfg_value(:start_server_cmd, full_start_cmd)
+            return full_start_cmd
+        end
 
-            return StartupManager.build_server_args(startup_args, startup_flags)
+        # Collects startup FLAGS from the environment and from config files
+        def self.collect_startup_flags(provided_configs)
+            startup_flags_key = provided_configs.keys.find {|k|  k.downcase == '[startup_flags]'}
+            startup_flags_env = ConfigGen.build_cfg_from_envs('arkflag_', '[startup_flags]')
+            startup_flags = ConfigGen.merge_configs(startup_flags_env, provided_configs[startup_flags_key])
+            LOG.debug("Collected Startup FLAGS: #{startup_flags}")
+            return startup_flags
+        end
+
+        # Collects startup ARGS from the environment and from config files
+        def self.collect_startup_args(provided_configs)
+            startup_args_key = provided_configs.keys.find {|k|  k.downcase == '[startup_args]'}
+            startup_args_env = ConfigGen.build_cfg_from_envs('arkarg_', '[startup_args]')
+            startup_args = ConfigGen.merge_configs(startup_args_env, provided_configs[startup_args_key])
+            LOG.debug("Collected Startup ARGS: #{startup_flags}")
+            return startup_args
         end
 
         def self.build_server_args(args, flags)

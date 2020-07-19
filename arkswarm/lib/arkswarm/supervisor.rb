@@ -11,7 +11,8 @@ module Arkswarm
         provided_configs = ConfigLoader.discover_configurations('/config')
 
         # Build startup command
-        Arkswarm.set_cfg_value(:start_server_cmd, StartupManager.build_startup_cmd(provided_configs))
+        StartupManager.build_startup_cmd(provided_configs)
+        
         
         # Check if there is an ARK installation already
         new_server_status = FileManipulator.install_server()
