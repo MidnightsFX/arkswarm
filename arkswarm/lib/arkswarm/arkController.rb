@@ -87,8 +87,5 @@ module Arkswarm
             full_request << '+quit'
             return full_request.join(' ')
         end
-
-
-
     end
 end

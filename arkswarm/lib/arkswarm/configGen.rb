@@ -1,10 +1,10 @@
 module Arkswarm
   module ConfigGen
 
-    def self.set_ark_globals(game_cfg, gameuser_cfg)
+    def self.set_ark_globals(gameuser_cfg)
       # These only comes from ENV values
-      serverMap = ENV['serverMap'].nil? ? 'TheIsland' : ENV['serverMap'] 
-      sessionName = ENV['sessionName'].nil? ? 'Arkswarm' : ENV['sessionName']
+      server_map = ENV['serverMap'].nil? ? 'TheIsland' : ENV['serverMap']
+      session_name = ENV['sessionName'].nil? ? 'Arkswarm' : ENV['sessionName']
 
       srv_pass = Util.arr_select(gameuser_cfg['ServerSettings'], 'ServerPassword')
       user_srv_pass = if srv_pass.empty?
@@ -12,16 +12,12 @@ module Arkswarm
                       else
                         srv_pass[1]
                       end
-      ServerPassword
-
       adminpass = ENV['adminpass'].nil? ? 'lazyadmin' : ENV['adminpass']
 
-      game_cfg
-      
-      Constants.set_cfg_value('map', map)
-      Constants.set_cfg_value('sessionname', serverMap)
-      Constants.set_cfg_value('serverpass', user_srv_pass)
-      Constants.set_cfg_value('adminpass', adminpass)
+      Arkswarm.set_cfg_value('map', server_map)
+      Arkswarm.set_cfg_value('sessionname', session_name)
+      Arkswarm.set_cfg_value('serverpass', user_srv_pass)
+      Arkswarm.set_cfg_value('adminpass', adminpass)
     end
 
     def self.gen_game_conf(ark_cfg_dir, provided_configuration = nil)
@@ -50,9 +46,9 @@ module Arkswarm
     # merges the total jumble of configs into the correct places
     def self.merge_config_by_type(type, primary_config, provided_configuration)
       merged_configuration = {}
-      shootergame_key = provided_configuration.keys.find {|k|  k.downcase == '[/script/shootergame.shootergamemode]'}
-      startup_args_key = provided_configuration.keys.find {|k|  k.downcase == '[startup_args]'}
-      startup_flags_key = provided_configuration.keys.find {|k|  k.downcase == '[startup_flags]'}
+      shootergame_key = provided_configuration.keys.find {|k| k.downcase == '[/script/shootergame.shootergamemode]'}
+      startup_args_key = provided_configuration.keys.find {|k| k.downcase == '[startup_args]'}
+      startup_flags_key = provided_configuration.keys.find {|k| k.downcase == '[startup_flags]'}
       if type == :game
         # merge only '[/script/shootergame.shootergamemode]', does nothing if that doesnt exist
         LOG.debug("Checking for shootergame key: #{provided_configuration.keys} found? #{shootergame_key}")
@@ -68,10 +64,10 @@ module Arkswarm
         end
       else
         # Merge everything but "[/script/shootergame.shootergamemode]" which is for game and "[startup]" which is for startup arguments
-        cfg = Util.hash_remove_keys(provided_configuration, shootergame_key, startup_key, startup_flags_key)
+        cfg = Util.hash_remove_keys(provided_configuration, shootergame_key, startup_args_key, startup_flags_key)
         merged_configuration = ConfigLoader.merge_configs(primary_config, cfg)
       end
-      LOG.debug("Returning merged configuration.")
+      LOG.debug('Returning merged configuration.')
       return merged_configuration
     end
 
@@ -79,15 +75,16 @@ module Arkswarm
     def self.build_cfg_from_envs(env_key_partial, section_header = 'ungrouped')
       partial_key = env_key_partial.downcase
       env_hash = {}
-      env_hash[section_header] = { "content" => [], "keys" => [] }
+      env_hash[section_header] = { 'content' => [], 'keys' => [] }
       ENV.keys.each do |key|
-        next unless key.include?("#{partial_key}")
-        line_contents = "#{key.gsub("#{partial_key}", '')}=#{ENV[key]}".split("=")
-        line_contents << "" if line_contents.length == 1
-        env_hash[section_header]["content"] << line_contents
-        env_hash[section_header]["keys"] << "#{key.gsub("#{partial_key}"
+        next unless key.include?(partial_key)
+
+        line_contents = "#{key.gsub(partial_key, '')}=#{ENV[key]}".split('=')
+        line_contents << '' if line_contents.length == 1
+        env_hash[section_header]['content'] << line_contents
+        env_hash[section_header]['keys'] << key.gsub(partial_key).to_s
       end
-      LOG.debug("Build ENV Hash: #{env_hash}")
+      LOG.debug("Built ENV Hash: #{env_hash}")
       return env_hash
     end
 
