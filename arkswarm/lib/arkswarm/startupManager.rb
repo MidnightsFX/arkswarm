@@ -5,13 +5,8 @@ module Arkswarm
     def self.build_startup_cmd(provided_configs)
       startup_flags = StartupManager.collect_startup_flags(provided_configs)['[startup_flags]']
       startup_args = StartupManager.collect_startup_args(provided_configs)['[startup_args]']
-      # If mods are defined in the configuration set them so their IDs can be used later to check for updates etc
-      if startup_args['keys'].include?('GameModIds')
-        mods = arr_select(startup_args['content'], 'GameModIds')
-        Arkswarm.set_cfg_value(:mods, mods[1].split(','))
-      else
-        Arkswarm.set_cfg_value(:mods, nil)
-      end
+      # Define the active mods
+      StartupManager.set_mods(provided_configs['ServerSettings'], startup_args)
       full_start_cmd = StartupManager.build_server_args(startup_args, startup_flags)
       Arkswarm.set_cfg_value(:start_server_cmd, full_start_cmd)
       return full_start_cmd
@@ -39,7 +34,7 @@ module Arkswarm
 
     def self.build_server_args(args, flags)
       startup_flags = []
-      startup_args = [Arkswarm.config['map'].to_s, 'listen']
+      startup_args = [Arkswarm.config['map'], 'listen']
       args['content'].each do |arg|
         startup_args << if arg[1].empty?
                           arg[0] # Support for non-key-value entries like 'listen'
@@ -57,9 +52,29 @@ module Arkswarm
       end
       LOG.debug("Startup Flags: #{startup_flags}")
 
-      startup_command = "/server/ShooterGame/Binaries/Linux/ShooterGameServer #{startup_args.join('?')} #{startup_flags.join(" ")}"
+      startup_command = "/server/ShooterGame/Binaries/Linux/ShooterGameServer #{startup_args.join('?')} #{startup_flags.join(' ')}"
       LOG.info("Built Startup Command: #{startup_command}")
       return startup_command
+    end
+
+    def self.set_mods(provided_configuration, startup_args)
+      mods = ''
+      mods = Utils.arr_select(startup_args['content'], 'GameModIds')[0][1] if startup_args['keys'].include?('GameModIds')
+      if provided_configuration
+        if provided_configuration['keys'].include?('ActiveMods')
+          LOG.debug('Found ActiveMods config, setting mods')
+          mods_source2 = Utils.arr_select(provided_configuration['content'], 'ActiveMods')[0][1]
+          mods += mods_source2 unless mods_source2.empty?
+        end
+      end
+      u_mods = mods.split(',').uniq
+      LOG.debug("Setting mods to: #{u_mods}")
+      Arkswarm.set_cfg_value(:mods, u_mods)
+      Arkswarm.set_cfg_value(:mods, []) if u_mods.empty?
+    end
+
+    def self.start_server_ensure_running()
+
     end
   end
 end

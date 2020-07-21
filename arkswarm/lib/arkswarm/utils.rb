@@ -42,6 +42,16 @@ module Arkswarm
       return results
     end
 
+    # for downcasing section headers when merging.
+    def self.downcase_keys(hash)
+      new_hash = {}
+      hash.each_pair do |k, v|
+        new_hash.merge!({ k.downcase => v })
+      end
+      # return { hash: downcased_hash, original_keys: hash.keys }
+      return new_hash
+    end
+
     # Checks the truthiness of an object
     def self.true?(obj)
       return obj.to_s.downcase == 'true'

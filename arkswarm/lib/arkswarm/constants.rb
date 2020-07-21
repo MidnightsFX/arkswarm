@@ -6,8 +6,9 @@ module Arkswarm
 
   VERSION = '0.1.0'.freeze
 
-  ARKID='376030'.freeze
-  STEAMCMD='/steamcmd/steamcmd.sh'.freeze
+  ARKID = '376030'.freeze
+  STEAMCMD = '/steamcmd/steamcmd.sh'.freeze
+  CFG_PATH = '/server/ShooterGame/Saved/Config/LinuxServer'.freeze
   GAMEINI_MONIKER = ['game', 'gameini', 'game.ini'].freeze
   ARK_INSTANCE_VARS = %w[serverMap serverMapModId].freeze
   GAMEUSERSETTINGSINI_MONIKER = ['gameuser', 'gameuser', 'gameusersetting', 'gameusersettings', 'gameusersettings.ini'].freeze

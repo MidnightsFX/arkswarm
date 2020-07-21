@@ -64,49 +64,67 @@ module Arkswarm
 
     def self.merge_configs(primary, secondary)
       return primary if secondary.nil?
+
       merged_hash = Util.deep_copy(primary)
-      LOG.debug("Merging: #{primary.keys} & #{secondary.keys}")
+      LOG.debug("Merging: #{merged_hash.keys} & #{secondary.keys}")
+
       secondary.each do |key, values|
-        if merged_hash.has_key?(key)
+        # determine the seelcted key in both
+        secondary_key = key
+        primary_key = nil
+        merged_hash.keys.each do |mkey|
+          primary_key = mkey if mkey.downcase == key.downcase
+        end
+        # key exists in both, merge
+        if primary_key && secondary_key # merged_hash.key?(key)
           LOG.debug("primary & secondary key #{key} found merging")
           # gotta merge in the key
-          secondary[key]['content'].each do |entry|
+          secondary[secondary_key]['content'].each do |entry|
             next if entry[0].nil? # nothing to merge if the entry is nil, but how did you get here anyways?
 
             LOG.debug("Merging entry: #{entry}")
             # if the key can be a duplicated, it just gets added
             # or if it is a space, it also just gets added, so we can merge configs with spaces in them easier
             if DUPLICATABLE_KEYS.include?(entry[0]) || entry[0].empty?
-              LOG.debug("Duplicatable key #{entry[0]} found, adding key")
-              LOG.debug("Adding key #{entry[0]}, adding value #{entry}")
-              merged_hash[key]['keys'] << entry[0] unless primary[key]['keys'].include?(entry[0]) # only need the key, in keys, if this is the first one
-              add_key = true
-              merged_hash[key]['content'].each do |dup_entry|
-                add_key = false if dup_entry[1] == entry[1] # this value already exists, don't add it
-              end
-              merged_hash[key]['content'] << entry if add_key
-            elsif merged_hash[key]['keys'].include?(entry[0]) # its a non-duplicatable key, that already exists, needs its value updated
-              LOG.debug("Non-duplicatable key #{entry[0]} found, taking preferred value")
-              merged_hash[key]['content'].each do |prime_entry|
-                # LOG.debug("Looking for primary key #{entry[0]} == #{prime_entry[0]} | #{prime_entry[0] == entry[0]}")
-                next unless prime_entry[0] == entry[0]
-
-                LOG.debug("Found key: Setting #{entry[1]}")
-                prime_entry[1] = entry[1]
-                break
-              end
+              ConfigLoader.merge_duplicitable_key!(merged_hash[primary_key], entry)
+            elsif merged_hash[primary_key]['keys'].include?(entry[0])
+              # its a non-duplicatable key, that already exists, needs its value updated
+              ConfigLoader.merge_non_duplicitable_key!(merged_hash[primary_key], entry)
             else # the section exists, but doesn't contain the provided key- add it
               LOG.debug("New key #{entry[0]} found, adding value")
-              merged_hash[key]['keys'] << entry[0]
-              merged_hash[key]['content'] << entry
+              merged_hash[primary_key]['keys'] << entry[0]
+              merged_hash[primary_key]['content'] << entry
             end
           end
         else
           # no merge, just add the key and its values
-          merged_hash[key] = values
+          merged_hash[primary_key] = values
         end
       end
       return merged_hash
+    end
+
+    def self.merge_duplicitable_key!(result_hash_entry, entry)
+      LOG.debug("Duplicatable key #{entry[0]} found, adding key")
+      LOG.debug("Adding key #{entry[0]}, adding value #{entry}")
+      result_hash_entry['keys'] << entry[0] unless result_hash_entry['keys'].include?(entry[0]) # only need the key, in keys, if this is the first one
+      add_key = true
+      result_hash_entry['content'].each do |dup_entry|
+        add_key = false if dup_entry[1] == entry[1] # this value already exists, don't add it
+      end
+      result_hash_entry['content'] << entry if add_key
+    end
+
+    def self.merge_non_duplicitable_key!(result_hash_entry, entry)
+      LOG.debug("Non-duplicatable key #{entry[0]} found, taking preferred value")
+      result_hash_entry['content'].each do |prime_entry|
+        # LOG.debug("Looking for primary key #{entry[0]} == #{prime_entry[0]} | #{prime_entry[0] == entry[0]}")
+        next unless prime_entry[0] == entry[0]
+
+        LOG.debug("Found key: Setting #{entry[1]}")
+        prime_entry[1] = entry[1]
+        break
+      end
     end
 
     # Filters through a configuration hash and updates the key which matches the one passed in
@@ -149,7 +167,11 @@ module Arkswarm
         contents << key unless key == 'ungrouped' # do not write the header for ungrouped values
         values['content'].each do |entry|
           LOG.debug("writing #{entry}")
-          contents << entry.empty? ? '' : entry.join('=').to_s
+          contents << if entry.empty?
+                        ''
+                      else
+                        entry.join('=').to_s
+                      end
         end
         # contents << "\n"
       end

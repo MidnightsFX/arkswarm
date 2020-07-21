@@ -2,7 +2,8 @@ module Arkswarm
     module FileManipulator
       # walks the filepath and if there is no file/folder there it will generate them, does nothing if they exist
       def self.ensure_file(location, filename = nil, enfore_permissions = true)
-        ug_info = File.stat('/home/steam/steamcmd/steamcmd.sh')
+        LOG.debug("Ensuring File/Folder: #{location}/#{filename}")
+        ug_info = File.stat('/steamcmd') # Not sure the owner/group is going to always be correct forr this
         folder_location = '/'
         location.split('/').each do |segment|
           next if segment == '' # skip start or end slashes

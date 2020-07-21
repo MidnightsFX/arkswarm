@@ -4,8 +4,9 @@ module Arkswarm
     def self.set_ark_globals(gameuser_cfg)
       # These only comes from ENV values
       server_map = ENV['serverMap'].nil? ? 'TheIsland' : ENV['serverMap']
+      server_map = 'TheIsland' if server_map.empty? # ensure its not just set to nothing
       session_name = ENV['sessionName'].nil? ? 'Arkswarm' : ENV['sessionName']
-
+      session_name = 'Arkswarm' if session_name.empty? # ensure its not just set to nothing
       srv_pass = Util.arr_select(gameuser_cfg['ServerSettings'], 'ServerPassword')
       user_srv_pass = if srv_pass.empty?
                         ''
@@ -13,6 +14,7 @@ module Arkswarm
                         srv_pass[1]
                       end
       adminpass = ENV['adminpass'].nil? ? 'lazyadmin' : ENV['adminpass']
+      adminpass = 'lazyadmin' if adminpass.empty? # ensure its not just set to nothing
 
       Arkswarm.set_cfg_value('map', server_map)
       Arkswarm.set_cfg_value('sessionname', session_name)
@@ -26,6 +28,7 @@ module Arkswarm
       env_cfg = ConfigGen.build_cfg_from_envs('arkgame_', '[/script/shootergame.shootergamemode]')
       contents = ConfigLoader.parse_ini_file("#{ark_cfg_dir}/#{cfgname}")
       game_cfg = ConfigGen.merge_config_by_type(:game, contents, provided_configuration) unless provided_configuration.nil?
+      LOG.debug("Partial Configuration #{game_cfg}")
       final_game_cfg = ConfigGen.merge_config_by_type(:game, game_cfg, env_cfg)
       ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, final_game_cfg)
       return final_game_cfg
@@ -47,27 +50,29 @@ module Arkswarm
     def self.merge_config_by_type(type, primary_config, provided_configuration)
       merged_configuration = {}
       shootergame_key = provided_configuration.keys.find {|k| k.downcase == '[/script/shootergame.shootergamemode]'}
-      startup_args_key = provided_configuration.keys.find {|k| k.downcase == '[startup_args]'}
-      startup_flags_key = provided_configuration.keys.find {|k| k.downcase == '[startup_flags]'}
+      prime_shootergame_key = primary_config.keys.find {|k| k.downcase == '[/script/shootergame.shootergamemode]'}
       if type == :game
         # merge only '[/script/shootergame.shootergamemode]', does nothing if that doesnt exist
         LOG.debug("Checking for shootergame key: #{provided_configuration.keys} found? #{shootergame_key}")
-        unless shootergame_key.nil?
+        if !shootergame_key.nil?
           cased_provided_cfg = { '[/Script/ShooterGame.ShooterGameMode]' => provided_configuration[shootergame_key] } # Ark cares about the casing so we need to also...
-          shooter_cfg = if primary_config[shootergame_key] 
-                          { '[/Script/ShooterGame.ShooterGameMode]' => primary_config[shootergame_key] }
-                        else # primary config might not have this section, in which case we need to provide an empty one
-                          { '[/Script/ShooterGame.ShooterGameMode]' => { 'content' => [], 'keys' => []} }
-                        end
+          shooter_cfg = { '[/Script/ShooterGame.ShooterGameMode]' => primary_config[prime_shootergame_key] } if primary_config[prime_shootergame_key]
+          shooter_cfg = { '[/Script/ShooterGame.ShooterGameMode]' => provided_configuration[shootergame_key] } if primary_config[prime_shootergame_key] && shooter_cfg.nil?
+          shooter_cfg = { '[/Script/ShooterGame.ShooterGameMode]' => { 'content' => [], 'keys' => [] } } if shooter_cfg.nil?
           LOG.debug("Providing: #{shooter_cfg} & #{cased_provided_cfg}")
           merged_configuration = ConfigLoader.merge_configs(shooter_cfg, cased_provided_cfg)
+        else
+          LOG.debug('Shootergame key not found, skipping merge.')
         end
       else
-        # Merge everything but "[/script/shootergame.shootergamemode]" which is for game and "[startup]" which is for startup arguments
+        # Merge everything but "[/script/shootergame.shootergamemode]" which is for game and "[startup_*]" which is for startup arguments
+        startup_args_key = provided_configuration.keys.find {|k| k.downcase == '[startup_args]'}
+        startup_flags_key = provided_configuration.keys.find {|k| k.downcase == '[startup_flags]'}
         cfg = Util.hash_remove_keys(provided_configuration, shootergame_key, startup_args_key, startup_flags_key)
         merged_configuration = ConfigLoader.merge_configs(primary_config, cfg)
       end
       LOG.debug('Returning merged configuration.')
+      LOG.debug(merged_configuration.to_s)
       return merged_configuration
     end
 
@@ -98,14 +103,14 @@ module Arkswarm
     # Logs the configuration file contents
     def self.readout_file(file_location, filename)
       return false unless File.file?("#{file_location}/#{filename}")
+
       LOG.info("Generated #{filename} Configuration File:")
       LOG.info("#{file_location}/#{filename}")
       if Arkswarm.config[:showcfg]
         LOG.info('----------------- Config Start -----------------')
-        LOG.info("\n#{File.readlines("#{file_location}/#{filename}").join.to_s}")
+        LOG.info("\n#{File.readlines("#{file_location}/#{filename}").join}")
         LOG.info('----------------- Config End -------------------')
       end
     end
-
   end
 end
