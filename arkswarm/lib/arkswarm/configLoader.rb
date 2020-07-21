@@ -31,7 +31,7 @@ module Arkswarm
           end
           if line.empty? # keep empty lines but dont multiply or add their keys
             LOG.debug('Found an empty line, keeping it.')
-            file_contents[current_section]['content'] << ''
+            file_contents[current_section]['content'] << ['', '']
           else
             LOG.debug("Found a non-empty, non-header line to add to a section: #{line}")
             line_contents = line.split('=')
@@ -82,15 +82,15 @@ module Arkswarm
           LOG.debug("primary-#{primary_key} & secondary key-#{secondary_key} found merging")
           # gotta merge in the key
           secondary[secondary_key]['content'].each do |entry|
-            next if entry[0].nil? # nothing to merge if the entry is nil, but how did you get here anyways?
-
-            LOG.debug("Merging entry: #{entry}")
+            LOG.debug("Merging Entry: #{entry}")
             # if the key can be a duplicated, it just gets added
             # or if it is a space, it also just gets added, so we can merge configs with spaces in them easier
             if DUPLICATABLE_KEYS.include?(entry[0]) || entry[0].empty?
+              LOG.debug("Adding Duplicatable Key: #{entry}")
               ConfigLoader.merge_duplicitable_key!(merged_hash[primary_key], entry)
             elsif merged_hash[primary_key]['keys'].include?(entry[0])
               # its a non-duplicatable key, that already exists, needs its value updated
+              LOG.debug("Updating Non-Duplicatable Key: #{entry}")
               ConfigLoader.merge_non_duplicitable_key!(merged_hash[primary_key], entry)
             else # the section exists, but doesn't contain the provided key- add it
               LOG.debug("New key #{entry[0]} found, adding value")
@@ -108,8 +108,10 @@ module Arkswarm
     end
 
     def self.merge_duplicitable_key!(result_hash_entry, entry)
-      LOG.debug("Duplicatable key #{entry[0]} found, adding key")
-      LOG.debug("Adding key #{entry[0]}, adding value #{entry}")
+      if entry[0].empty? # shortcircuit for empty lines
+        result_hash_entry['content'] << entry
+        return
+      end
       result_hash_entry['keys'] << entry[0] unless result_hash_entry['keys'].include?(entry[0]) # only need the key, in keys, if this is the first one
       add_key = true
       result_hash_entry['content'].each do |dup_entry|

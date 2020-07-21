@@ -5,7 +5,8 @@ RSpec.describe Arkswarm::StartupManager do
     @startup_contents = Arkswarm::ConfigLoader.parse_ini_file("#{@path}/startup_stuff.ini")
   end
 
-  it 'Collects Startup FLAGS' do
+  it 'Collects Startup FLAGS', :this do
+    # Arkswarm.set_debug
     results = Arkswarm::StartupManager.collect_startup_flags(@startup_contents)
     expect(results['[startup_flags]']['keys']).to eq(['NoBattlEye', 'noundermeshkilling'])
   end

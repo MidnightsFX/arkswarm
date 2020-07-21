@@ -10,6 +10,11 @@ module Arkswarm
       Arkswarm.set_cfg_value('steamuser', username)
     end
 
+    def self.start_arkserver_thread()
+      thr = Thread.new { system(Arkswarm.config[:start_server_cmd]) }
+      Arkswarm.set_cfg_value(:arkthread, thr)
+      return thr.status
+    end
     # Checks for updates for the ARK server, returns status based on the update information.
     def self.check_for_server_updates()
       update_status = `#{ArkController.build_steamcmd_request("+force_install_dir /server +app_info_update 1 +app_status #{ARKID}")}`
@@ -21,7 +26,8 @@ module Arkswarm
           status_details = false
           break
         end
-        status_details['needupdate'] = false if line.include?("'#{ARKID}' already up to date.")
+        # Not sure these are really the correct statuses to be checking for.
+        status_details['needupdate'] = false if line.include?("'#{ARKID}' already up to date.") || line.include?(' update state:  ( No Error )')
         next unless app_info == true || line.empty? || line.include?(' - ')
 
         if line[0..2] == '   ' && status_details['mounted depots']

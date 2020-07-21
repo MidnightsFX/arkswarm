@@ -112,5 +112,10 @@ module Arkswarm
         LOG.info('----------------- Config End -------------------')
       end
     end
+
+    # For things that cant handle spaces, like startup args
+    def self.remove_blanks!(content_array)
+      content_array.reject! {|entry| entry[0].empty?}
+    end
   end
 end

@@ -29,7 +29,7 @@ RSpec.describe Arkswarm::ConfigLoader do
   end
 
   it 'Should generate a contents tree when the primary is empty', :this do
-    Arkswarm.set_debug
+    # Arkswarm.set_debug
     primary = {}
     secondary = Arkswarm::ConfigLoader.parse_ini_file("#{__dir__}/testdata/provided_dupe_allowed2.ini")
     merged_configs = Arkswarm::ConfigLoader.merge_configs(primary, secondary)

@@ -52,10 +52,10 @@ module Arkswarm
     def self.check_for_updates(logstatus = true)
       LOG.debug('Starting Checks for updates.')
       update_status = ArkController.check_for_server_updates()
-      mod_update_status = Util.true?(ArkController.check_for_mod_updates)
+      mod_updates_needed = Util.true?(ArkController.check_for_mod_updates)
       missing_mods_status = Util.true?(ArkController.check_for_missing_mods)
-      LOG.debug("Updates Needed: ARK-#{!update_status['needsupdate']} MODS-#{!mod_update_status}")
-      if !update_status && !mod_update_status
+      LOG.debug("Updates Needed: ARK-#{update_status['needsupdate']} MODS-#{mod_updates_needed}")
+      if update_status['needsupdate'] && mod_updates_needed
         LOG.info('No Update needed.') if logstatus
         return false
       end
@@ -63,17 +63,16 @@ module Arkswarm
       # Connect to RCON and tell the server to save and exit
       # RconExecutor.new()
       # Stop the server
-      if update_status
+      if update_status['needsupdate']
         LOG.info('ARK needs an update, updating.')
         ArkController.update_install_ark
       end
-      if mod_update_status || missing_mods_status
+      if mod_updates_needed || missing_mods_status
         LOG.info('Mods need an update')
         ArkController.check_mods_and_update(true)
       end
       LOG.info('Starting server back up.')
-      start_status = system(Arkswarm.config[:start_server_cmd])
-      LOG.debug("Server Started Status: #{start_status}")
+      LOG.debug("Server thread starting: #{ArkController.start_arkserver_thread()}")
       return true
     end
 
@@ -91,7 +90,9 @@ module Arkswarm
       Supervisor.check_for_updates()
       # TODO: setup a backoff for server restart, and integrate discord messaging on failures
       LOG.info('Starting server.')
-      start_server = `#{Arkswarm.config[:start_server_cmd]}`
+      start_server = ArkController.start_arkserver_thread()
+      sleep 500
+      # TODO: Loop until the server is running
       Arkswarm.connect_to_rcon()
       return start_server
     end

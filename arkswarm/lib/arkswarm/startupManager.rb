@@ -18,6 +18,7 @@ module Arkswarm
       startup_flags_env = ConfigGen.build_cfg_from_envs('arkflag_', '[startup_flags]')
       startup_flags_provided = Util.hash_select(provided_configs, startup_flags_key)
       startup_flags = ConfigLoader.merge_configs(startup_flags_env, startup_flags_provided)
+      ConfigGen.remove_blanks!(startup_flags[startup_flags_key]['content'])
       LOG.debug("Collected Startup FLAGS: #{startup_flags}")
       return startup_flags
     end
