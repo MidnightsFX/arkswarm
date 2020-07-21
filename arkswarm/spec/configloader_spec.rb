@@ -18,13 +18,22 @@ RSpec.describe Arkswarm::ConfigLoader do
 
   it "Should load all of the key/values for a section under that respective section" do
     file_contents = Arkswarm::ConfigLoader.parse_ini_file("#{__dir__}/testdata/example_gameuser.ini")
-    expect(file_contents["[RareSightings]"]["content"].length).to eq(5)
+    expect(file_contents['[RareSightings]']['content'].length).to eq(5)
   end
 
-  it "Should generate a contents tree with duplicatable keys that are different, not the same" do
+  it 'Should generate a contents tree with duplicatable keys that are different, not the same' do
     primary = Arkswarm::ConfigLoader.parse_ini_file("#{__dir__}/testdata/provided_dupe_allowed.ini")
     secondary = Arkswarm::ConfigLoader.parse_ini_file("#{__dir__}/testdata/provided_dupe_allowed2.ini")
     merged_configs = Arkswarm::ConfigLoader.merge_configs(primary, secondary)
-    expect(merged_configs["[test]"]["content"].length).to eq(5)
+    expect(merged_configs['[test]']['content'].length).to eq(5)
+  end
+
+  it 'Should generate a contents tree when the primary is empty', :this do
+    Arkswarm.set_debug
+    primary = {}
+    secondary = Arkswarm::ConfigLoader.parse_ini_file("#{__dir__}/testdata/provided_dupe_allowed2.ini")
+    merged_configs = Arkswarm::ConfigLoader.merge_configs(primary, secondary)
+    expect(merged_configs['[test]']['content'].length).to eq(4)
+    expect(merged_configs['[test]']['keys']).to eq(%w[FakeValue OverrideNamedEngramEntries OverrideNamedEngramEntries bAllowUnlimitedRespecs])
   end
 end

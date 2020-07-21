@@ -43,10 +43,9 @@ RSpec.describe Arkswarm::ConfigGen do
     expect(cfg_result["[ServerSettings]"]["content"]).to eq([["StructurePreventResourceRadiusMultiplier", "1.000000"], ["AllowRaidDinoFeeding", "False"], ["RaiderProtection", ""]])
   end
 
-  it 'Should Build a game.ini', :this do
+  it 'Should Build a game.ini' do
     expect(Arkswarm::FileManipulator).to receive(:ensure_file).and_return(true) # mock out the filecheck
-    # expect(Arkswarm::ConfigGen).to receive(:gen_addvalues_read_write_cfg).and_return(true)
-    Arkswarm.set_debug
+    expect(Arkswarm::ConfigGen).to receive(:gen_addvalues_read_write_cfg).and_return(true) # doesn't really matter unless this is broken, keeps tests files from changing by mocking it
     contents1 = Arkswarm::ConfigLoader.parse_ini_file("#{@path}/example_game.ini")
     cfg_result = Arkswarm::ConfigGen.gen_game_conf(@path, contents1)
     expect(cfg_result.keys).to eq(['[/Script/ShooterGame.ShooterGameMode]'])

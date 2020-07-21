@@ -68,16 +68,18 @@ module Arkswarm
       merged_hash = Util.deep_copy(primary)
       LOG.debug("Merging: #{merged_hash.keys} & #{secondary.keys}")
 
-      secondary.each do |key, values|
+      secondary.each do |secondary_key, values|
         # determine the seelcted key in both
-        secondary_key = key
         primary_key = nil
-        merged_hash.keys.each do |mkey|
-          primary_key = mkey if mkey.downcase == key.downcase
+        unless merged_hash.keys.empty?
+          merged_hash.keys.each do |mkey|
+            LOG.debug("Checking key #{mkey}")
+            primary_key = mkey if mkey.downcase == secondary_key.downcase
+          end
         end
         # key exists in both, merge
         if primary_key && secondary_key # merged_hash.key?(key)
-          LOG.debug("primary & secondary key #{key} found merging")
+          LOG.debug("primary-#{primary_key} & secondary key-#{secondary_key} found merging")
           # gotta merge in the key
           secondary[secondary_key]['content'].each do |entry|
             next if entry[0].nil? # nothing to merge if the entry is nil, but how did you get here anyways?
@@ -98,7 +100,8 @@ module Arkswarm
           end
         else
           # no merge, just add the key and its values
-          merged_hash[primary_key] = values
+          LOG.debug("New Section added from secondary hash: #{secondary_key}")
+          merged_hash[secondary_key] = values
         end
       end
       return merged_hash
