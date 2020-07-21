@@ -34,7 +34,7 @@ module Arkswarm
             file_contents[current_section]['content'] << ['', '']
           else
             LOG.debug("Found a non-empty, non-header line to add to a section: #{line}")
-            line_contents = line.split('=')
+            line_contents = line.split('=', 2)
             line_contents << '' if line_contents.length == 1
             file_contents[current_section]['content'] << line_contents
             file_contents[current_section]['keys'] << line_contents[0]
@@ -116,7 +116,10 @@ module Arkswarm
       result_hash_entry['keys'] << entry[0] unless result_hash_entry['keys'].include?(entry[0]) # only need the key, in keys, if this is the first one
       add_key = true
       result_hash_entry['content'].each do |dup_entry|
-        add_key = false if dup_entry[1] == entry[1] # this value already exists, don't add it
+        if dup_entry[1] == entry[1] # this value already exists, don't add it
+          LOG.debug("Found identical entry, skipping adding this one: #{entry} <=> #{dup_entry}")
+          add_key = false
+        end
       end
       if add_key
         result_hash_entry['content'] << entry

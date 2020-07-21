@@ -54,7 +54,7 @@ module Arkswarm
       update_status = ArkController.check_for_server_updates()
       mod_updates_needed = Util.true?(ArkController.check_for_mod_updates)
       missing_mods_status = Util.true?(ArkController.check_for_missing_mods)
-      LOG.debug("Updates Needed: ARK-#{update_status['needupdate']} MODS-#{mod_updates_needed} | #{update_status}")
+      LOG.debug("Updates Needed: ARK-#{update_status} MODS-#{mod_updates_needed} | #{update_status}")
       if update_status['needupdate'] && mod_updates_needed
         LOG.info('No Update needed.') if logstatus
         return false

@@ -8,6 +8,12 @@ module Arkswarm
       session_name = ENV['sessionName'].nil? ? 'Arkswarm' : ENV['sessionName']
       session_name = 'Arkswarm' if session_name.empty? # ensure its not just set to nothing
       srv_pass = Util.arr_select(gameuser_cfg['ServerSettings'], 'ServerPassword')
+
+      # Early add mods
+      mods = ENV['GameModIds'].split(',') unless ENV['GameModIds'].nil?
+      mods = ENV['mods'].split(',') unless ENV['mods'].nil? && mods.nil?
+      Arkswarm.set_cfg_value(:mods, mods) unless mods.nil?
+
       user_srv_pass = if srv_pass.empty?
                         ''
                       else

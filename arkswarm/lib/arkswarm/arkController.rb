@@ -27,7 +27,7 @@ module Arkswarm
       LOG.debug("Update Output: #{update_status}")
       update_status.split("\n").each do |line|
         if line.include?("#{ARKID} already up to date.")
-          status_details = false
+          status_details['needupdate'] = false
           break
         end
         # Not sure these are really the correct statuses to be checking for.
