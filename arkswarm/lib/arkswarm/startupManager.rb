@@ -6,7 +6,8 @@ module Arkswarm
       startup_flags = StartupManager.collect_startup_flags(provided_configs)['[startup_flags]']
       startup_args = StartupManager.collect_startup_args(provided_configs)['[startup_args]']
       # Define the active mods
-      StartupManager.set_mods(provided_configs['ServerSettings'], startup_args)
+      serversettings = provided_configs.keys.find {|k| k.downcase == '[serversettings]'}
+      StartupManager.set_mods(provided_configs[serversettings], startup_args)
       full_start_cmd = StartupManager.build_server_args(startup_args, startup_flags)
       Arkswarm.set_cfg_value(:start_server_cmd, full_start_cmd)
       return full_start_cmd
@@ -29,13 +30,17 @@ module Arkswarm
       startup_args_env = ConfigGen.build_cfg_from_envs('arkarg_', '[startup_args]')
       startup_args_provided = Util.hash_select(provided_configs, startup_args_key)
       startup_args = ConfigLoader.merge_configs(startup_args_env, startup_args_provided)
+      unless Arkswarm.config[:mods].empty?
+        startup_args[startup_args_key]['content'] << ['GameModIds', Arkswarm.config[:mods].join(',')]
+        startup_args[startup_args_key]['keys'] << 'GameModIds'
+      end
       LOG.debug("Collected Startup ARGS: #{startup_args}")
       return startup_args
     end
 
     def self.build_server_args(args, flags)
       startup_flags = []
-      startup_args = [Arkswarm.config['map'], 'listen']
+      startup_args = [Arkswarm.config['map'], 'listen', "SessionName=#{Arkswarm.config['sessionname']}"]
       args['content'].each do |arg|
         startup_args << if arg[1].empty?
                           arg[0] # Support for non-key-value entries like 'listen'

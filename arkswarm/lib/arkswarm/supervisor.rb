@@ -54,8 +54,8 @@ module Arkswarm
       update_status = ArkController.check_for_server_updates()
       mod_updates_needed = Util.true?(ArkController.check_for_mod_updates)
       missing_mods_status = Util.true?(ArkController.check_for_missing_mods)
-      LOG.debug("Updates Needed: ARK-#{update_status['needsupdate']} MODS-#{mod_updates_needed}")
-      if update_status['needsupdate'] && mod_updates_needed
+      LOG.debug("Updates Needed: ARK-#{update_status['needupdate']} MODS-#{mod_updates_needed} | #{update_status}")
+      if update_status['needupdate'] && mod_updates_needed
         LOG.info('No Update needed.') if logstatus
         return false
       end
@@ -63,7 +63,7 @@ module Arkswarm
       # Connect to RCON and tell the server to save and exit
       # RconExecutor.new()
       # Stop the server
-      if update_status['needsupdate']
+      if update_status['needupdate']
         LOG.info('ARK needs an update, updating.')
         ArkController.update_install_ark
       end

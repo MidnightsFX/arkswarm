@@ -11,7 +11,11 @@ module Arkswarm
     end
 
     def self.start_arkserver_thread()
-      thr = Thread.new { system(Arkswarm.config[:start_server_cmd]) }
+      thr = Thread.new do
+        LOG.debug('Starting Arkserver Thread')
+        system(Arkswarm.config[:start_server_cmd])
+        LOG.debug('Arkserver Thread exited')
+      end
       Arkswarm.set_cfg_value(:arkthread, thr)
       return thr.status
     end

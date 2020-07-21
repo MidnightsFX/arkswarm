@@ -109,15 +109,19 @@ module Arkswarm
 
     def self.merge_duplicitable_key!(result_hash_entry, entry)
       if entry[0].empty? # shortcircuit for empty lines
+        LOG.debug('Added a blank line from merged configuration.')
         result_hash_entry['content'] << entry
-        return
+        return false
       end
       result_hash_entry['keys'] << entry[0] unless result_hash_entry['keys'].include?(entry[0]) # only need the key, in keys, if this is the first one
       add_key = true
       result_hash_entry['content'].each do |dup_entry|
         add_key = false if dup_entry[1] == entry[1] # this value already exists, don't add it
       end
-      result_hash_entry['content'] << entry if add_key
+      if add_key
+        result_hash_entry['content'] << entry
+        LOG.debug("merged #{entry}.")
+      end
     end
 
     def self.merge_non_duplicitable_key!(result_hash_entry, entry)
@@ -171,12 +175,11 @@ module Arkswarm
         LOG.debug("section #{key} - #{values}")
         contents << key unless key == 'ungrouped' # do not write the header for ungrouped values
         values['content'].each do |entry|
-          LOG.debug("writing #{entry}")
-          contents << if entry[0].empty?
-                        ''
-                      else
-                        entry.join('=').to_s
-                      end
+          add = nil
+          add = '' if entry[0].empty?
+          add = entry.join('').to_s if entry[0][0] == '#'
+          add = entry.join('=').to_s if add.nil?
+          contents << add
         end
         # contents << "\n"
       end

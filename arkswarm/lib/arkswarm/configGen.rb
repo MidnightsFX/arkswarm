@@ -15,7 +15,7 @@ module Arkswarm
                       end
       adminpass = ENV['adminpass'].nil? ? 'lazyadmin' : ENV['adminpass']
       adminpass = 'lazyadmin' if adminpass.empty? # ensure its not just set to nothing
-
+      LOG.debug("Storing globals: map-#{server_map}, sessionName-#{session_name}, serverpass-#{user_srv_pass}, adminpass-#{adminpass}")
       Arkswarm.set_cfg_value('map', server_map)
       Arkswarm.set_cfg_value('sessionname', session_name)
       Arkswarm.set_cfg_value('serverpass', user_srv_pass)

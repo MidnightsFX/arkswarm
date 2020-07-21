@@ -28,12 +28,19 @@ RSpec.describe Arkswarm::ConfigLoader do
     expect(merged_configs['[test]']['content'].length).to eq(5)
   end
 
-  it 'Should generate a contents tree when the primary is empty', :this do
+  it 'Should generate a contents tree when the primary is empty' do
     # Arkswarm.set_debug
     primary = {}
     secondary = Arkswarm::ConfigLoader.parse_ini_file("#{__dir__}/testdata/provided_dupe_allowed2.ini")
     merged_configs = Arkswarm::ConfigLoader.merge_configs(primary, secondary)
     expect(merged_configs['[test]']['content'].length).to eq(4)
     expect(merged_configs['[test]']['keys']).to eq(%w[FakeValue OverrideNamedEngramEntries OverrideNamedEngramEntries bAllowUnlimitedRespecs])
+  end
+
+  it 'Should generate the line by line contents of a config file', :this do
+    # Arkswarm.set_debug
+    secondary = Arkswarm::ConfigLoader.parse_ini_file("#{__dir__}/testdata/small_gameuser.ini")
+    gen_cfg = Arkswarm::ConfigLoader.generate_config_file(secondary)
+    expect(gen_cfg[4..-1]).to eq(File.read("#{__dir__}/testdata/small_gameuser.ini").split("\n"))
   end
 end
