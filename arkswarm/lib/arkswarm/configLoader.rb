@@ -172,7 +172,7 @@ module Arkswarm
         contents << key unless key == 'ungrouped' # do not write the header for ungrouped values
         values['content'].each do |entry|
           LOG.debug("writing #{entry}")
-          contents << if entry.empty?
+          contents << if entry[0].empty?
                         ''
                       else
                         entry.join('=').to_s
