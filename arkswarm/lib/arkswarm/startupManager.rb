@@ -30,6 +30,7 @@ module Arkswarm
       startup_args_env = ConfigGen.build_cfg_from_envs('arkarg_', '[startup_args]')
       startup_args_provided = Util.hash_select(provided_configs, startup_args_key)
       startup_args = ConfigLoader.merge_configs(startup_args_env, startup_args_provided)
+      ConfigGen.remove_blanks!(startup_args)
       LOG.debug("Collected Startup ARGS: #{startup_args}")
       return startup_args
     end
@@ -73,6 +74,7 @@ module Arkswarm
           mods += mods_source2 unless mods_source2.empty?
         end
       end
+      mods = ENV['mods'] if ENV['mods'] # In this case, like most others environment wins
       u_mods = if mods.nil? && !Arkswarm.config[:mods].nil?
                  Arkswarm.config[:mods].uniq
                else

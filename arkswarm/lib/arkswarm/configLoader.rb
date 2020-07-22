@@ -73,7 +73,7 @@ module Arkswarm
         primary_key = nil
         unless merged_hash.keys.empty?
           merged_hash.keys.each do |mkey|
-            LOG.debug("Checking key #{mkey}")
+            LOG.debug("Checking key #{mkey}") if Arkswarm.config[:verbose]
             primary_key = mkey if mkey.downcase == secondary_key.downcase
           end
         end
@@ -82,7 +82,7 @@ module Arkswarm
           LOG.debug("primary-#{primary_key} & secondary key-#{secondary_key} found merging")
           # gotta merge in the key
           secondary[secondary_key]['content'].each do |entry|
-            LOG.debug("Merging Entry: #{entry}")
+            LOG.debug("Merging Entry: #{entry}") if Arkswarm.config[:verbose]
             # if the key can be a duplicated, it just gets added
             # or if it is a space, it also just gets added, so we can merge configs with spaces in them easier
             if DUPLICATABLE_KEYS.include?(entry[0]) || entry[0].empty?
@@ -117,7 +117,7 @@ module Arkswarm
       add_key = true
       result_hash_entry['content'].each do |dup_entry|
         if dup_entry[1] == entry[1] # this value already exists, don't add it
-          LOG.debug("Found identical entry, skipping adding this one: #{entry} <=> #{dup_entry}")
+          LOG.debug("Found identical entry, skipping adding this one: #{entry} <=> #{dup_entry}") if Arkswarm.config[:verbose]
           add_key = false
         end
       end
@@ -175,7 +175,7 @@ module Arkswarm
       contents << '# it will be regenerated next application start'
       contents << '###############################################################'
       filehash.each do |key, values|
-        LOG.debug("section #{key} - #{values}")
+        LOG.debug("section #{key} - #{values}") if Arkswarm.config[:verbose]
         contents << key unless key == 'ungrouped' # do not write the header for ungrouped values
         values['content'].each do |entry|
           add = nil

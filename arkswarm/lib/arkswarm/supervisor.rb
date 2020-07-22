@@ -54,8 +54,8 @@ module Arkswarm
       update_status = ArkController.check_for_server_updates()
       mod_updates_needed = Util.true?(ArkController.check_for_mod_updates)
       missing_mods_status = Util.true?(ArkController.check_for_missing_mods)
-      LOG.debug("Updates Needed: ARK-#{update_status} MODS-#{mod_updates_needed} | #{update_status}")
-      if update_status['needupdate'] && mod_updates_needed
+      LOG.debug("Updates Needed: ARK-#{update_status['needupdate']} MODS-#{mod_updates_needed}")
+      if !update_status['needupdate'] && !mod_updates_needed
         LOG.info('No Update needed.') if logstatus
         return false
       end
@@ -77,7 +77,7 @@ module Arkswarm
     end
 
     def self.first_run(new_server_status)
-      LOG.debug('Starting server firstrun check')
+      LOG.info('Starting server firstrun check')
       if new_server_status
         LOG.info('New Server, installing ARK and Mods.')
         ArkController.update_install_ark(true) # update/install & validate ARK

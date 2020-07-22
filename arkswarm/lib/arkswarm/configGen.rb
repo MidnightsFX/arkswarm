@@ -21,7 +21,7 @@ module Arkswarm
                       end
       adminpass = ENV['adminpass'].nil? ? 'lazyadmin' : ENV['adminpass']
       adminpass = 'lazyadmin' if adminpass.empty? # ensure its not just set to nothing
-      LOG.debug("Storing globals: map-#{server_map}, sessionName-#{session_name}, serverpass-#{user_srv_pass}, adminpass-#{adminpass}")
+      LOG.debug("Storing globals: map-#{server_map}, sessionName-#{session_name}, serverpass-#{user_srv_pass}, adminpass-#{adminpass}, mods-#{mods}")
       Arkswarm.set_cfg_value('map', server_map)
       Arkswarm.set_cfg_value('sessionname', session_name)
       Arkswarm.set_cfg_value('serverpass', user_srv_pass)
@@ -34,7 +34,7 @@ module Arkswarm
       env_cfg = ConfigGen.build_cfg_from_envs('arkgame_', '[/script/shootergame.shootergamemode]')
       contents = ConfigLoader.parse_ini_file("#{ark_cfg_dir}/#{cfgname}")
       game_cfg = ConfigGen.merge_config_by_type(:game, contents, provided_configuration) unless provided_configuration.nil?
-      LOG.debug("Partial Configuration #{game_cfg}")
+      LOG.debug("Partial Configuration #{game_cfg}") if Arkswarm.config[:verbose]
       final_game_cfg = ConfigGen.merge_config_by_type(:game, game_cfg, env_cfg)
       ConfigGen.gen_addvalues_read_write_cfg(ark_cfg_dir, cfgname, final_game_cfg)
       return final_game_cfg
@@ -65,7 +65,7 @@ module Arkswarm
           shooter_cfg = { '[/Script/ShooterGame.ShooterGameMode]' => primary_config[prime_shootergame_key] } if primary_config[prime_shootergame_key]
           shooter_cfg = { '[/Script/ShooterGame.ShooterGameMode]' => provided_configuration[shootergame_key] } if primary_config[prime_shootergame_key] && shooter_cfg.nil?
           shooter_cfg = { '[/Script/ShooterGame.ShooterGameMode]' => { 'content' => [], 'keys' => [] } } if shooter_cfg.nil?
-          LOG.debug("Providing: #{shooter_cfg} & #{cased_provided_cfg}")
+          LOG.debug("Providing: #{shooter_cfg} & #{cased_provided_cfg}") if Arkswarm.config[:verbose]
           merged_configuration = ConfigLoader.merge_configs(shooter_cfg, cased_provided_cfg)
         else
           LOG.debug('Shootergame key not found, skipping merge.')
@@ -77,8 +77,10 @@ module Arkswarm
         cfg = Util.hash_remove_keys(provided_configuration, shootergame_key, startup_args_key, startup_flags_key)
         merged_configuration = ConfigLoader.merge_configs(primary_config, cfg)
       end
-      LOG.debug('Returning merged configuration.')
-      LOG.debug(merged_configuration.to_s)
+      if Arkswarm.config[:verbose]
+        LOG.debug('Returning merged configuration.')
+        LOG.debug(merged_configuration.to_s)
+      end
       return merged_configuration
     end
 

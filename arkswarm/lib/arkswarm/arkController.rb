@@ -24,7 +24,7 @@ module Arkswarm
       update_status = `#{ArkController.build_steamcmd_request("+force_install_dir /server +app_info_update 1 +app_status #{ARKID}")}`
       app_info = false
       status_details = { 'needupdate' => true }
-      LOG.debug("Update Output: #{update_status}")
+      LOG.debug("Update Output: #{update_status}") if Arkswarm.config[:verbose]
       update_status.split("\n").each do |line|
         if line.include?("#{ARKID} already up to date.")
           status_details['needupdate'] = false
@@ -42,7 +42,7 @@ module Arkswarm
         status_details[details[0].to_s] = details[1]
       end
       LOG.debug("Update Status for ARK: #{status_details}")
-      return update_status
+      return status_details
     end
 
     def self.check_mods_and_update(validate = false)
