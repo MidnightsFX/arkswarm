@@ -57,10 +57,10 @@ module Arkswarm
       update_required = false
       mods_to_update = []
       Arkswarm.config[:mods].each do |modid|
-        update_staged_mod = `#{ArkController.build_steamcmd_request("+workshop_download_item #{ARKID} #{modid}")}`
+        update_staged_mod = `#{ArkController.build_steamcmd_request("+force_install_dir #{ARKMOD_STAGING_DIR} +workshop_download_item #{ARKMODID} #{modid}")}`
         LOG.debug("Staged Mod-#{modid} updated: #{update_staged_mod}")
-        # Probably need to read metadata here and not just download things
-        mod_updates[modid.to_s] = update_status
+        mod_updates[modid.to_s] = true # hardcode a required mod update for now
+        # Consider validating each mod too
       end
 
       mod_updates.each do |k, v|
@@ -76,13 +76,6 @@ module Arkswarm
       return false
     end
 
-    def self.apply_updated_mods(mod_ids, validate)
-      mod_ids.each do |mod|
-        `#{ArkController.build_steamcmd_request("+workshop_download_item #{ARKID} #{mod} validate")}` if validate
-        # cp from source, to arkdir
-      end
-    end
-
     # Returns false is no mods missing, else returns missing mods
     def self.check_for_missing_mods()
       missing_mods = []
@@ -95,11 +88,6 @@ module Arkswarm
 
       return false
     end
-
-    # def self.download_update_mods()
-    #     +workshop_download_item 346110 812655342 +quit
-    #     +app_update 346110 validate +quit
-    # end
 
     # Install/update &/or validate ARK install
     # TODO: Check success and fail if ark is not installed/updated correctly
@@ -115,7 +103,9 @@ module Arkswarm
       full_request << "#{STEAMCMD} +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login #{Arkswarm.config['steamuser']}"
       full_request << request.to_s
       full_request << '+quit'
-      return full_request.join(' ')
+      req = full_request.join(' ')
+      LOG.debug("Built request: #{req}")
+      return req
     end
   end
 end

@@ -54,7 +54,9 @@ module Arkswarm
 
     # Checks the truthiness of an object
     def self.true?(obj)
-      return obj.to_s.downcase == 'true'
+      truthy = obj.to_s.downcase == 'true'
+      LOG.debug("Checking truthiness of #{obj} #{truthy}")
+      return truthy
     end
   end
 end

@@ -37,7 +37,7 @@ RSpec.describe Arkswarm::ConfigLoader do
     expect(merged_configs['[test]']['keys']).to eq(%w[FakeValue OverrideNamedEngramEntries OverrideNamedEngramEntries bAllowUnlimitedRespecs])
   end
 
-  it 'Should generate the line by line contents of a config file', :this do
+  it 'Should generate the line by line contents of a config file' do
     # Arkswarm.set_debug
     secondary = Arkswarm::ConfigLoader.parse_ini_file("#{__dir__}/testdata/small_gameuser.ini")
     gen_cfg = Arkswarm::ConfigLoader.generate_config_file(secondary)

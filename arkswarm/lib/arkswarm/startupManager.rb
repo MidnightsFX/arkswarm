@@ -36,6 +36,7 @@ module Arkswarm
     end
 
     def self.build_server_args(args, flags)
+      LOG.debug('Building server start command')
       startup_flags = []
       startup_args = [Arkswarm.config['map'], 'listen', "SessionName=#{Arkswarm.config['sessionname']}"]
       args['content'].each do |arg|
@@ -45,6 +46,7 @@ module Arkswarm
                           arg.join('=')
                         end
       end
+      ConfigGen.remove_blanks!(startup_args)
       LOG.debug("Startup Args: #{startup_args}")
       flags['content'].each do |flag|
         startup_flags << if flag[1].empty?
@@ -53,6 +55,7 @@ module Arkswarm
                            "-#{flag.join('=')}" # Support key-valued flags
                          end
       end
+      ConfigGen.remove_blanks!(startup_flags)
       LOG.debug("Startup Flags: #{startup_flags}")
 
       startup_command = "/server/ShooterGame/Binaries/Linux/ShooterGameServer #{startup_args.join('?')} #{startup_flags.join(' ')}"

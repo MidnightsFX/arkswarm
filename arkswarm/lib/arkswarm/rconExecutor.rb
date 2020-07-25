@@ -5,18 +5,18 @@ module Arkswarm
   class RconInstance
     @client = nil
 
-    def self.initialize(host: 'localhost', port:, password:)
+    def initialize(host = 'localhost', port, password)
       @client = Rcon::Client.new(host: host, port: port, password: password)
       @client.authenticate!
     end
 
-    def self.execute(cmd)
-      return client.execute(cmd.to_s)
+    def execute(cmd)
+      return @client.execute(cmd.to_s)
     end
   end
 
   def self.connect_to_rcon()
-    rcon_connection = RconInstance.new(host: 'localhost', port: Arkswarm.config[:rcon_port], pass: Arkswarm.config[:admin_pass])
+    rcon_connection = RconInstance.new('localhost', Arkswarm.config[:rcon_port], Arkswarm.config[:admin_pass])
     Arkswarm.config[:rcon_client] = rcon_connection
   end
 

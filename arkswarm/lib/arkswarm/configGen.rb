@@ -123,7 +123,15 @@ module Arkswarm
 
     # For things that cant handle spaces, like startup args
     def self.remove_blanks!(content_array)
-      content_array.reject! {|entry| entry[0].empty?}
+      content_array.reject! do |entry|
+        if entry.nil?
+          true
+        elsif entry[0].nil?
+          true
+        else
+          entry[0].empty?
+        end
+      end
     end
   end
 end

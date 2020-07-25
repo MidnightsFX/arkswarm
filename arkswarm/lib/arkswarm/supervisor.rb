@@ -1,36 +1,36 @@
 module Arkswarm
   module Supervisor
     def self.main_loop(options)
-      # begin
-      # Check for steam user (steam user is required to run DLC maps, Extinction, Aberration_P, ScorchedEarth_P)
-      ArkController.set_steam_user(ENV['steam_user'], ENV['steam_pass'])
-      Arkswarm.set_cfg_value(:showcfg, options[:showcfg])
+      begin
+        # Check for steam user (steam user is required to run DLC maps, Extinction, Aberration_P, ScorchedEarth_P)
+        ArkController.set_steam_user(ENV['steam_user'], ENV['steam_pass'])
+        Arkswarm.set_cfg_value(:showcfg, options[:showcfg])
 
-      # Ingest Configuration
-      provided_configs = ConfigLoader.discover_configurations('/config')
+        # Ingest Configuration
+        provided_configs = ConfigLoader.discover_configurations('/config')
 
-      # Check if there is an ARK installation already
-      new_server_status = FileManipulator.install_server()
+        # Check if there is an ARK installation already
+        new_server_status = FileManipulator.install_server()
 
-      # Generate Game configurations
-      gameuser_cfg = ConfigGen.gen_game_user_conf(CFG_PATH, provided_configs)
-      ConfigGen.gen_game_conf(CFG_PATH, provided_configs) # Also gen game.conf
-      ConfigGen.set_ark_globals(gameuser_cfg)
+        # Generate Game configurations
+        gameuser_cfg = ConfigGen.gen_game_user_conf(CFG_PATH, provided_configs)
+        ConfigGen.gen_game_conf(CFG_PATH, provided_configs) # Also gen game.conf
+        ConfigGen.set_ark_globals(gameuser_cfg)
 
-      # Build startup command
-      StartupManager.build_startup_cmd(provided_configs)
+        # Build startup command
+        StartupManager.build_startup_cmd(provided_configs)
 
-      # Handle Validation CLI option
-      FileManipulator.validate_gamefiles(options[:validate])
+        # Handle Validation CLI option
+        FileManipulator.validate_gamefiles(options[:validate])
 
-      # start service
-      # check if update is available
-      #  - wait until server is idle to update
-      Supervisor.run_server(new_server_status, options[:showstatus])
-      # rescue StandardError => e
-      #  LOG.error("Encounted Runtime Error: #{e.message}")
-      #  LOG.error("Trace: #{e.backtrace.inspect}")
-      # end
+        # start service
+        # check if update is available
+        #  - wait until server is idle to update
+        Supervisor.run_server(new_server_status, options[:showstatus])
+      rescue StandardError => e
+       LOG.error("Encounted Runtime Error: #{e.message}")
+       LOG.error("Trace: #{e.backtrace.inspect}")
+      end
     end
 
     # Loops running the server process
@@ -52,10 +52,10 @@ module Arkswarm
     def self.check_for_updates(logstatus = true)
       LOG.debug('Starting Checks for updates.')
       update_status = ArkController.check_for_server_updates()
-      mod_updates_needed = Util.true?(ArkController.check_for_mod_updates)
-      missing_mods_status = Util.true?(ArkController.check_for_missing_mods)
-      LOG.debug("Updates Needed: ARK-#{update_status['needupdate']} MODS-#{mod_updates_needed}")
-      if !update_status['needupdate'] && !mod_updates_needed
+      missing_mods_status = ArkController.check_for_missing_mods
+      mod_updates_needed = ArkController.check_for_mod_updates
+      LOG.debug("Updates Needed: ARK-#{update_status['needupdate']} MODS-#{mod_updates_needed} Mods Missing?-#{missing_mods_status}")
+      if !update_status['needupdate'] && !mod_updates_needed && !missing_mods_status
         LOG.info('No Update needed.') if logstatus
         return false
       end

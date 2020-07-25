@@ -45,7 +45,7 @@ module Arkswarm
         FileManipulator.ensure_file('/home/steam/Steam/steamapps/workshop')
         # Create an ark instance | only one instance per container
         LOG.info('Starting install of ARK.')
-        # LOG.info(`#{STEAMCMD} +login #{Arkswarm.config['steamuser']} +force_install_dir /server +app_update 376030 +quit`)
+        # LOG.info(`#{STEAMCMD} +login #{Arkswarm.config['steamuser']} +force_install_dir /server +app_update 376030 +quit`) 
         ArkController.update_install_ark(validate)
         LOG.info('Ark install completed.')
         return true
