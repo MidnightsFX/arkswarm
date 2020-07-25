@@ -9,3 +9,6 @@
 
 # rspec failure tracking
 .rspec_status
+
+# mod testing stuff
+/spec/testdata/mods/
